@@ -1,6 +1,7 @@
 import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { DEFAULT_PASSWORD_HASH } from "./default-password";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const AUTH_FILE = path.join(DATA_DIR, "auth.json");
@@ -8,11 +9,12 @@ const AUTH_FILE = path.join(DATA_DIR, "auth.json");
 type AuthFile = { passwordHash: string; updatedAt: string };
 
 /**
- * The current password hash.
+ * The current password hash, strongest source first:
+ *   1. data/auth.json      — a reset done through the dashboard, or set-password
+ *   2. ADMIN_PASSWORD_HASH — environment variable, the right place when hosted
+ *   3. DEFAULT_PASSWORD_HASH — built-in fallback so a fresh clone just works
  *
- * ADMIN_PASSWORD_HASH is the bootstrap value; once the password is changed
- * through the dashboard the new hash lives in data/auth.json, which is
- * gitignored because it is a credential and this repository is public.
+ * Only ever a hash. The plaintext password is never stored anywhere.
  */
 export async function getPasswordHash(): Promise<string | undefined> {
   try {
@@ -20,9 +22,9 @@ export async function getPasswordHash(): Promise<string | undefined> {
     const parsed = JSON.parse(raw) as AuthFile;
     if (parsed?.passwordHash) return parsed.passwordHash;
   } catch {
-    // No override saved yet — fall through to the environment value.
+    // No override saved yet — fall through.
   }
-  return process.env.ADMIN_PASSWORD_HASH;
+  return process.env.ADMIN_PASSWORD_HASH || DEFAULT_PASSWORD_HASH;
 }
 
 export async function setPasswordHash(passwordHash: string): Promise<void> {
