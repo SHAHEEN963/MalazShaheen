@@ -5,8 +5,8 @@
  * turned back into the original. It lives in the code so a fresh deployment
  * works without configuring anything, which is why it is safe to have in a
  * public repository *only as long as the password behind it stays strong*:
- * the current one is 20 random characters (~116 bits), far beyond offline
- * brute force against scrypt.
+ * the current one is 20 mixed characters, far beyond offline brute force
+ * against scrypt.
  *
  * Precedence, strongest first (see getPasswordHash):
  *   1. data/auth.json        — set by the dashboard reset or `npm run set-password`
@@ -17,4 +17,4 @@
  * printed hash in ADMIN_PASSWORD_HASH; that overrides this file.
  */
 export const DEFAULT_PASSWORD_HASH =
-  "scrypt$208e4b46c02d89e520c3c0f2c3210493$fda1cd7665b0b1376b6b7bca52747f4a87861c71578b696347266d34a824af48f5d61e133300f29a7b6c3146fc0852fd2a76551de554ae3bf1b10d217a4c7323";
+  "scrypt$fb0cb988dd45935cfe60fe525f2062d1$721917dd88bc2a06cb5e4d1bb85a479f11ebd9a9939f57bd2a3e6a2993d924e3de49914bcc38ac4965097f5fe0dd24bd280364e76d8989c7ec10d58c37d49c26";
