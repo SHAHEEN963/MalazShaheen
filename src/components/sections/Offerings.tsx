@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { services } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall } from "@/lib/useReducedMotion";
 import { RoomTag } from "../RoomTag";
 
@@ -12,7 +12,13 @@ const NUMERALS = ["٠١", "٠٢", "٠٣", "٠٤", "٠٥", "٠٦"];
  * Not cards: a list of oversized type rows. Hovering a row lifts it, sweeps a
  * gold rule across it, and floats a preview plate that trails the quill.
  */
-export function Offerings() {
+export function Offerings({
+  services,
+  copy,
+}: {
+  services: SiteContent["services"];
+  copy: SiteContent["sections"]["services"];
+}) {
   const [active, setActive] = useState<number | null>(null);
   const plateRef = useRef<HTMLDivElement>(null);
   const isSmall = useIsCoarseOrSmall();
@@ -47,10 +53,9 @@ export function Offerings() {
     <section id="services" className="relative z-10 bg-stone-800/88 py-28 sm:py-40">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-8">
-          <RoomTag index="٠٤" label="الخدمات" />
+          <RoomTag index="٠٤" label={copy.label} />
           <p className="max-w-sm font-editorial text-sm leading-relaxed text-ink-sand/80">
-            كل خدمة تبدأ بمحادثة عن المناسبة والكلمات، وتنتهي بقطعة تحمل اسمك
-            وحدك.
+            {copy.intro}
           </p>
         </div>
 

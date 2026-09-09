@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { testimonials } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { RoomTag } from "../RoomTag";
 
 /**
@@ -9,7 +9,13 @@ import { RoomTag } from "../RoomTag";
  * The one bright room. Driven by the arrows (or a swipe / trackpad), never on
  * a timer — nobody should have to wait for a carousel to come back around.
  */
-export function Voices() {
+export function Voices({
+  testimonials,
+  copy,
+}: {
+  testimonials: SiteContent["testimonials"];
+  copy: SiteContent["sections"]["voices"];
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -52,9 +58,9 @@ export function Voices() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-8">
           <div>
-            <RoomTag index="٠٦" label="الأصوات" />
+            <RoomTag index="٠٦" label={copy.label} />
             <h2 className="mt-6 max-w-2xl font-display text-[clamp(1.9rem,5vw,3.2rem)] leading-tight text-ink-ivory">
-              ما يقوله من حملوا أعمالي إلى بيوتهم
+              {copy.heading}
             </h2>
           </div>
 

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# dashboard credentials (never commit — this repo is public)
+/data/auth.json

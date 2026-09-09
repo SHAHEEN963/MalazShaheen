@@ -1,0 +1,489 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEON HORIZON — retro/synthwave theme.
+   Loaded only by the (retro) root layout, so nothing here touches the
+   Arabic calligraphy site that lives under (calligraphy).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  --color-void: #050014;
+  --color-deep: #0d0221;
+  --color-plum: #1b0736;
+  --color-grape: #2d0a4e;
+
+  --color-pink: #ff2e88;
+  --color-cyan: #00e5ff;
+  --color-violet: #b14aff;
+  --color-amber: #ffb200;
+  --color-ink: #f3ecff;
+  --color-dim: #a58fd0;
+
+  --font-display: var(--font-orbitron), "Impact", sans-serif;
+  --font-term: var(--font-vt323), ui-monospace, "Courier New", monospace;
+  --font-body: var(--font-chakra), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── base ──────────────────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  /* clears the fixed nav bar when jumping to an anchor */
+  scroll-padding-top: 5.5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-pink);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 3px;
+}
+
+/* ── CRT overlay: scanlines, tint, vignette ────────────────────────────── */
+
+.crt {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.22) 0px,
+      rgba(0, 0, 0, 0.22) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(ellipse at center, transparent 52%, rgba(5, 0, 20, 0.85) 100%);
+  mix-blend-mode: multiply;
+}
+
+.crt::after {
+  /* one bright band drifting down the tube */
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 18vh;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.035),
+    transparent
+  );
+  animation: sweep 7s linear infinite;
+}
+
+@keyframes sweep {
+  from { transform: translateY(-20vh); }
+  to { transform: translateY(120vh); }
+}
+
+/* ── the synthwave horizon behind the hero ─────────────────────────────── */
+
+.horizon {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 68%, rgba(177, 74, 255, 0.35), transparent 60%),
+    linear-gradient(
+      to bottom,
+      var(--color-void) 0%,
+      var(--color-plum) 55%,
+      var(--color-grape) 68%,
+      var(--color-void) 100%
+    );
+}
+
+.stars {
+  position: absolute;
+  inset: 0 0 42% 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 24%, #fff, transparent),
+    radial-gradient(1px 1px at 31% 62%, #cfe9ff, transparent),
+    radial-gradient(1px 1px at 48% 12%, #fff, transparent),
+    radial-gradient(1px 1px at 67% 45%, #ffd9f0, transparent),
+    radial-gradient(1px 1px at 82% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 91% 70%, #cfe9ff, transparent),
+    radial-gradient(1px 1px at 22% 82%, #fff, transparent),
+    radial-gradient(1px 1px at 58% 88%, #fff, transparent);
+  animation: twinkle 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  from { opacity: 0.45; }
+  to { opacity: 0.9; }
+}
+
+.sun {
+  position: absolute;
+  left: 50%;
+  bottom: 30%;
+  width: min(40vw, 26rem);
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #ffe600 0%, #ff9d00 42%, #ff2e88 78%, #b14aff 100%);
+  filter: drop-shadow(0 0 60px rgba(255, 46, 136, 0.55));
+}
+
+/* Horizontal slits across the lower half only — the classic sunset band.
+   Drawn as an overlay rather than a mask so it does not depend on
+   mask-composite support. */
+.sun::after {
+  content: "";
+  position: absolute;
+  inset: 52% 0 0 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 6px,
+    var(--color-void) 6px 11px
+  );
+}
+
+.floor {
+  position: absolute;
+  inset-inline: -50%;
+  bottom: -8%;
+  height: 46%;
+  transform: perspective(24rem) rotateX(66deg);
+  transform-origin: 50% 100%;
+  background-image:
+    linear-gradient(to right, rgba(0, 229, 255, 0.55) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 46, 136, 0.55) 1px, transparent 1px);
+  background-size: 5% 3rem;
+  animation: run 1.6s linear infinite;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%);
+}
+
+@keyframes run {
+  from { background-position-y: 0; }
+  to { background-position-y: 3rem; }
+}
+
+/* ── type treatments ───────────────────────────────────────────────────── */
+
+.chrome {
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0%,
+    #d9e2f5 32%,
+    #7f8db4 48%,
+    #ffffff 52%,
+    #ffb5e0 72%,
+    #ff2e88 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(45, 10, 78, 0.9))
+    drop-shadow(0 0 28px rgba(255, 46, 136, 0.5));
+}
+
+.neon-cyan {
+  color: var(--color-cyan);
+  text-shadow: 0 0 4px rgba(0, 229, 255, 0.9), 0 0 18px rgba(0, 229, 255, 0.55);
+}
+
+.neon-pink {
+  color: var(--color-pink);
+  text-shadow: 0 0 4px rgba(255, 46, 136, 0.9), 0 0 18px rgba(255, 46, 136, 0.5);
+}
+
+
+/* Copy that sits directly on the sun needs its own dark halo to stay legible. */
+.on-sun {
+  text-shadow:
+    0 0 8px var(--color-void),
+    0 0 20px var(--color-void),
+    0 2px 3px rgba(5, 0, 20, 0.95);
+}
+
+.eyebrow {
+  font-family: var(--font-term);
+  font-size: 1.15rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-cyan);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+/* Glitch fringing, hover/focus only so it is never a permanent strobe. */
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glitch:hover::before,
+.glitch:focus-visible::before {
+  opacity: 1;
+  color: var(--color-cyan);
+  animation: shift-a 0.35s steps(2, end) infinite;
+}
+
+.glitch:hover::after,
+.glitch:focus-visible::after {
+  opacity: 1;
+  color: var(--color-pink);
+  animation: shift-b 0.35s steps(2, end) infinite;
+}
+
+@keyframes shift-a {
+  0%, 100% { transform: translate(-2px, 1px); clip-path: inset(0 0 62% 0); }
+  50% { transform: translate(2px, -1px); clip-path: inset(38% 0 0 0); }
+}
+
+@keyframes shift-b {
+  0%, 100% { transform: translate(2px, -1px); clip-path: inset(45% 0 0 0); }
+  50% { transform: translate(-2px, 1px); clip-path: inset(0 0 55% 0); }
+}
+
+/* ── surfaces ──────────────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  background: linear-gradient(160deg, rgba(45, 10, 78, 0.72), rgba(13, 2, 33, 0.9));
+  border: 1px solid rgba(177, 74, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 40px rgba(177, 74, 255, 0.09),
+    0 0 0 1px rgba(5, 0, 20, 0.8),
+    0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Two corner ticks — cheap targeting-reticle framing. */
+.bracket::before,
+.bracket::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-cyan);
+  pointer-events: none;
+}
+
+.bracket::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.bracket::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.terminal {
+  background: rgba(3, 0, 12, 0.88);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  box-shadow: 0 0 0 1px rgba(5, 0, 20, 0.9), 0 0 40px rgba(0, 229, 255, 0.12);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: linear-gradient(to bottom, #3a1a63, #24073f);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.35);
+  font-family: var(--font-term);
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+  color: var(--color-cyan);
+}
+
+.led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ── controls ──────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.6rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 2px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.btn-pink {
+  color: var(--color-pink);
+  box-shadow: 4px 4px 0 var(--color-pink);
+}
+
+.btn-pink:hover {
+  background: rgba(255, 46, 136, 0.14);
+}
+
+.btn-cyan {
+  color: var(--color-cyan);
+  box-shadow: 4px 4px 0 var(--color-cyan);
+}
+
+.btn-cyan:hover {
+  background: rgba(0, 229, 255, 0.12);
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+}
+
+.btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 currentColor;
+}
+
+.chip {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(177, 74, 255, 0.5);
+  color: var(--color-dim);
+  background: rgba(13, 2, 33, 0.6);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chip:hover {
+  color: var(--color-ink);
+  border-color: var(--color-cyan);
+}
+
+.chip[aria-pressed="true"] {
+  color: var(--color-void);
+  background: var(--color-cyan);
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
+}
+
+/* ── ticker ────────────────────────────────────────────────────────────── */
+
+.ticker {
+  display: flex;
+  overflow: hidden;
+  border-block: 1px solid rgba(255, 46, 136, 0.4);
+  background: linear-gradient(to bottom, rgba(45, 10, 78, 0.6), rgba(5, 0, 20, 0.6));
+}
+
+.ticker-track {
+  display: flex;
+  flex: none;
+  gap: 3rem;
+  padding-block: 0.7rem;
+  padding-inline-end: 3rem;
+  white-space: nowrap;
+  animation: slide 28s linear infinite;
+}
+
+@keyframes slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+/* ── section scaffolding ───────────────────────────────────────────────── */
+
+.section {
+  position: relative;
+  padding-block: clamp(4.5rem, 10vw, 8rem);
+  scroll-margin-top: 5rem;
+}
+
+.wrap {
+  width: min(100% - 2.5rem, 76rem);
+  margin-inline: auto;
+}
+
+.rule {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-violet), transparent);
+}
+
+.scan-bg {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(177, 74, 255, 0.05) 0 2px,
+    transparent 2px 6px
+  );
+}
+
+/* ── motion opt-out ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .crt::after,
+  .stars,
+  .floor,
+  .ticker-track,
+  .glitch:hover::before,
+  .glitch:hover::after,
+  .glitch:focus-visible::before,
+  .glitch:focus-visible::after {
+    animation: none !important;
+  }
+
+  .glitch::before,
+  .glitch::after {
+    display: none;
+  }
+
+  .btn:hover,
+  .btn:active {
+    transform: none;
+  }
+}

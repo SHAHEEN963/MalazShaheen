@@ -2,21 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { works } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
 import { RoomTag } from "../RoomTag";
-
-const STEP = 360 / works.length;
 
 /**
  * Room 03 — المعرض.
  * The works hang on a rotating cylinder in real perspective space. Drag it,
  * wheel it, or arrow through it; the piece facing you lifts toward the light.
  */
-export function Gallery() {
+export function Gallery({
+  works,
+  copy,
+}: {
+  works: SiteContent["works"];
+  copy: SiteContent["sections"]["gallery"];
+}) {
   const isSmall = useIsCoarseOrSmall();
   const reducedMotion = useReducedMotion();
   const radius = isSmall ? 260 : 430;
+  // Derived from the live list, so adding or removing a work re-spaces the drum.
+  const STEP = works.length > 0 ? 360 / works.length : 360;
 
   const [rotation, setRotation] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -96,9 +102,9 @@ export function Gallery() {
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <RoomTag index="٠٣" label="المعرض" />
+            <RoomTag index="٠٣" label={copy.label} />
             <h2 className="mt-6 font-display text-[clamp(2rem,5vw,3.4rem)] text-ink-ivory">
-              اسحب لتدور بين الأعمال
+              {copy.heading}
             </h2>
           </div>
 
@@ -180,12 +186,28 @@ export function Gallery() {
                   <span className="font-ui text-[0.7rem] tracking-wide text-ink-gold">
                     {work.category}
                   </span>
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 flex items-center justify-center font-display text-[5rem] text-ink-ivory/[0.06]"
-                  >
-                    {work.title.slice(0, 1)}
-                  </span>
+                  {work.image ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={work.image}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 h-full w-full object-cover opacity-70"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(28,28,26,0.92),rgba(28,28,26,0.25))]"
+                      />
+                    </>
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 flex items-center justify-center font-display text-[5rem] text-ink-ivory/[0.06]"
+                    >
+                      {work.title.slice(0, 1)}
+                    </span>
+                  )}
                   <span className="relative">
                     <span className="block font-display text-2xl leading-tight text-ink-ivory">
                       {work.title}
@@ -195,7 +217,7 @@ export function Gallery() {
                     </span>
                     {isActive && (
                       <span className="mt-3 block font-ui text-xs text-ink-gold">
-                        اضغط للتفاصيل
+                        {copy.cardHint}
                       </span>
                     )}
                   </span>
@@ -241,6 +263,14 @@ export function Gallery() {
               >
                 إغلاق ✕
               </button>
+              {activeWork.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={activeWork.image}
+                  alt={activeWork.title}
+                  className="max-h-[38vh] w-full rounded-sm border border-ink-gold/25 object-cover"
+                />
+              )}
               <span className="font-ui text-xs tracking-wide text-ink-gold">
                 {activeWork.category} · {activeWork.year}
               </span>
@@ -252,7 +282,7 @@ export function Gallery() {
                 {activeWork.description}
               </p>
               <a href="#contact" className="btn btn-ghost mt-4 self-start">
-                اطلب عملًا مشابهًا
+                {copy.detailCta}
               </a>
             </motion.div>
           </motion.div>

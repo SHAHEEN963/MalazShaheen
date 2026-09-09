@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { artist } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 
 const links = [
   { href: "#about", label: "المرسم" },
@@ -14,7 +14,7 @@ const links = [
   { href: "#contact", label: "التواصل" },
 ];
 
-export function Nav() {
+export function Nav({ artist }: { artist: SiteContent["artist"] }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { artist } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { RoomTag } from "../RoomTag";
 
 /**
@@ -10,7 +10,13 @@ import { RoomTag } from "../RoomTag";
  * simply moving across the room leaves nothing behind; what you do write stays
  * until you clear it, and can be saved as a PNG.
  */
-export function InkLab() {
+export function InkLab({
+  artistName,
+  copy,
+}: {
+  artistName: string;
+  copy: SiteContent["sections"]["ink"];
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasDrawn, setHasDrawn] = useState(false);
   const clearRef = useRef<() => void>(() => {});
@@ -128,10 +134,10 @@ export function InkLab() {
     octx.drawImage(canvas, 0, 0);
 
     const link = document.createElement("a");
-    link.download = `${artist.name} — الحبر.png`;
+    link.download = `${artistName} — ${copy.label}.png`;
     link.href = out.toDataURL("image/png");
     link.click();
-  }, []);
+  }, [artistName, copy.label]);
 
   return (
     <section
@@ -140,10 +146,9 @@ export function InkLab() {
     >
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-6">
-          <RoomTag index="٠٧" label="الحبر" />
+          <RoomTag index="٠٧" label={copy.label} />
           <p className="max-w-sm font-editorial text-sm leading-relaxed text-ink-sand/80">
-            الريشة في يدك الآن. حرّكها ببطء ليغزر الحبر، وبسرعة ليرقّ الخط — كما
-            يفعل القلم الحقيقي على الورق.
+            {copy.intro}
           </p>
         </div>
 
@@ -162,7 +167,7 @@ export function InkLab() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 flex items-center justify-center font-ui text-base font-bold text-ink-sand/45"
               >
-                انقر للكتابة
+                {copy.canvasHint}
               </span>
             )}
           </div>
@@ -175,7 +180,7 @@ export function InkLab() {
             disabled={!hasDrawn}
             className="btn btn-ghost disabled:opacity-40"
           >
-            امسح الورقة
+            {copy.clearLabel}
           </button>
           <button
             type="button"
@@ -183,7 +188,7 @@ export function InkLab() {
             disabled={!hasDrawn}
             className="btn btn-solid disabled:opacity-40"
           >
-            احفظ الصورة
+            {copy.saveLabel}
           </button>
         </div>
       </div>

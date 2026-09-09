@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { process as steps } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { RoomTag } from "../RoomTag";
 
 /**
@@ -11,7 +11,13 @@ import { RoomTag } from "../RoomTag";
  * the viewer forward through them: each stage rushes up out of the fog, holds,
  * then passes overhead.
  */
-export function Journey() {
+export function Journey({
+  steps,
+  copy,
+}: {
+  steps: SiteContent["process"];
+  copy: SiteContent["sections"]["journey"];
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -28,7 +34,7 @@ export function Journey() {
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 px-6 pt-20">
           <div className="mx-auto max-w-6xl">
-            <RoomTag index="٠٥" label="الرحلة" />
+            <RoomTag index="٠٥" label={copy.label} />
           </div>
         </div>
 
@@ -70,7 +76,7 @@ function DepthCard({
   total,
   progress,
 }: {
-  step: (typeof steps)[number];
+  step: SiteContent["process"][number];
   index: number;
   total: number;
   progress: MotionValue<number>;

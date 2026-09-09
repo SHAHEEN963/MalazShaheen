@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { artist, contact } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall } from "@/lib/useReducedMotion";
 import { RoomTag } from "../RoomTag";
 
@@ -11,7 +11,15 @@ import { RoomTag } from "../RoomTag";
  * The closing room: a flourish that writes itself across the wall, and two
  * magnetic doors out — WhatsApp and email.
  */
-export function Signature() {
+export function Signature({
+  artist,
+  contact,
+  copy,
+}: {
+  artist: SiteContent["artist"];
+  contact: SiteContent["contact"];
+  copy: SiteContent["sections"]["signature"];
+}) {
   const whatsappHref = `https://wa.me/${contact.whatsapp.replace(/[^\d]/g, "")}`;
 
   return (
@@ -25,7 +33,7 @@ export function Signature() {
       />
 
       <div className="relative mx-auto max-w-5xl px-6 text-center">
-        <RoomTag index="٠٨" label="التوقيع" align="center" />
+        <RoomTag index="٠٨" label={copy.label} align="center" />
 
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -34,8 +42,8 @@ export function Signature() {
           transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
           className="mt-10 font-display text-[clamp(2.6rem,10vw,7rem)] leading-[1.05] text-ink-ivory"
         >
-          لنكتب شيئًا
-          <span className="text-gold-foil"> يبقى</span>
+          {copy.heading}
+          <span className="text-gold-foil">{copy.headingAccent}</span>
         </motion.h2>
 
         {/* flourish that draws itself */}
@@ -64,8 +72,7 @@ export function Signature() {
           transition={{ duration: 1, delay: 0.4 }}
           className="mx-auto mt-6 max-w-lg font-editorial text-lg leading-relaxed text-ink-sand"
         >
-          حدّثني عن المناسبة والكلمات والشعور الذي تريده أن يحمله العمل. أرد
-          شخصيًا على كل رسالة.
+          {copy.intro}
         </motion.p>
 
         <div className="mt-14 flex flex-col items-center justify-center gap-5 sm:flex-row">

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { artist } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { RoomTag } from "../RoomTag";
 
 /**
@@ -11,7 +11,15 @@ import { RoomTag } from "../RoomTag";
  * the 3D scene, an asymmetric grid, hairline rules, and a portrait plinth that
  * turns in space as the room scrolls past.
  */
-export function Studio() {
+export function Studio({
+  artist,
+  stats,
+  copy,
+}: {
+  artist: SiteContent["artist"];
+  stats: SiteContent["stats"];
+  copy: SiteContent["sections"]["studio"];
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -37,7 +45,7 @@ export function Studio() {
       />
 
       <div className="relative mx-auto max-w-6xl px-6 py-28 sm:py-40">
-        <RoomTag index="٠٢" label="المرسم" />
+        <RoomTag index="٠٢" label={copy.label} />
 
         <div className="mt-16 grid gap-14 md:grid-cols-12 md:gap-10">
           {/* Portrait plinth */}
@@ -46,11 +54,20 @@ export function Studio() {
             className="md:col-span-4"
           >
             <div className="relative aspect-[3/4] w-full max-w-xs overflow-hidden bg-stone-950">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-display text-gold-foil text-[7rem] leading-none">
-                  {artist.name.slice(0, 1)}
-                </span>
-              </div>
+              {artist.portrait ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={artist.portrait}
+                  alt={artist.name}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="font-display text-gold-foil text-[7rem] leading-none">
+                    {artist.name.slice(0, 1)}
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-4 border border-ink-gold/25" />
               <div className="absolute bottom-0 start-0 end-0 h-24 bg-[linear-gradient(to_top,rgba(28,28,26,0.9),transparent)]" />
             </div>
@@ -89,10 +106,9 @@ export function Studio() {
             </div>
 
             <div className="mt-14 grid grid-cols-2 gap-8 sm:grid-cols-4">
-              <Stat value={`${artist.yearsExperience}`} label="سنة خبرة" />
-              <Stat value="٤" label="خطوط متقنة" />
-              <Stat value="٢٦٠" label="عملًا مسلَّمًا" />
-              <Stat value="١٤" label="دولة" />
+              {stats.map((stat) => (
+                <Stat key={stat.id} value={stat.value} label={stat.label} />
+              ))}
             </div>
 
             <ul className="mt-14 flex flex-wrap gap-3">

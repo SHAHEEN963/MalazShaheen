@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { artist } from "@/lib/data";
+import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
@@ -11,7 +11,13 @@ import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
  * mask, tilts with the pointer on a real perspective plane, and dissolves
  * backwards into the scene as you leave the room.
  */
-export function Hero() {
+export function Hero({
+  artist,
+  copy,
+}: {
+  artist: SiteContent["artist"];
+  copy: SiteContent["sections"]["hero"];
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion();
   const isSmall = useIsCoarseOrSmall();
@@ -96,10 +102,10 @@ export function Hero() {
           className="mt-12 flex flex-col gap-4 sm:flex-row"
         >
           <a href="#works" className="btn btn-solid">
-            ادخل المعرض
+            {copy.ctaPrimary}
           </a>
           <a href="#contact" className="btn btn-ghost">
-            احجز مشروعًا
+            {copy.ctaSecondary}
           </a>
         </motion.div>
       </motion.div>
@@ -111,7 +117,7 @@ export function Hero() {
         className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3"
       >
         <span className="font-ui text-[0.7rem] tracking-widest text-ink-sand/60">
-          ٧ غرف
+          {copy.scrollHint}
         </span>
         <span className="block h-14 w-px bg-[linear-gradient(to_bottom,var(--color-ink-gold),transparent)]" />
       </motion.div>

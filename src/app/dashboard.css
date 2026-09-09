@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* Admin panel theme — shares the studio palette but is deliberately plain and
+   functional rather than atmospheric. */
+:root {
+  --color-stone-950: #1c1c1a;
+  --color-stone-900: #232321;
+  --color-stone-850: #2a2a27;
+  --color-stone-800: #33332f;
+  --color-stone-700: #3e3e39;
+  --color-stone-600: #4d4d47;
+  --color-ink-sand: #a9a396;
+  --color-ink-ivory: #f0ece2;
+  --color-ink-gold: #c9a24b;
+  --color-ink-gold-light: #e8d29a;
+  --color-danger: #d4674f;
+  --color-success: #6fa06a;
+}
+
+@theme inline {
+  --color-stone-950: var(--color-stone-950);
+  --color-stone-900: var(--color-stone-900);
+  --color-stone-850: var(--color-stone-850);
+  --color-stone-800: var(--color-stone-800);
+  --color-stone-700: var(--color-stone-700);
+  --color-stone-600: var(--color-stone-600);
+  --color-ink-sand: var(--color-ink-sand);
+  --color-ink-ivory: var(--color-ink-ivory);
+  --color-ink-gold: var(--color-ink-gold);
+  --color-ink-gold-light: var(--color-ink-gold-light);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: "Thmanyah Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  background-color: var(--color-stone-900);
+  color: var(--color-ink-ivory);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+}
+
+::selection {
+  background: var(--color-ink-gold);
+  color: var(--color-stone-900);
+}
+
+/* ── Form controls ─────────────────────────────────────────────── */
+.dash-input,
+.dash-textarea,
+.dash-select {
+  width: 100%;
+  background-color: var(--color-stone-950);
+  border: 1px solid rgba(240, 236, 226, 0.14);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  color: var(--color-ink-ivory);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash-input:focus,
+.dash-textarea:focus,
+.dash-select:focus {
+  outline: none;
+  border-color: var(--color-ink-gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 75, 0.18);
+}
+
+.dash-textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.dash-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-ink-sand);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.dash-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+.dash-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dash-btn-primary {
+  background-color: var(--color-ink-gold);
+  color: var(--color-stone-950);
+}
+.dash-btn-primary:hover:not(:disabled) {
+  background-color: var(--color-ink-gold-light);
+}
+.dash-btn-ghost {
+  border-color: rgba(240, 236, 226, 0.2);
+  color: var(--color-ink-ivory);
+  background: transparent;
+}
+.dash-btn-ghost:hover:not(:disabled) {
+  border-color: var(--color-ink-gold);
+  color: var(--color-ink-gold);
+}
+.dash-btn-danger {
+  border-color: rgba(212, 103, 79, 0.45);
+  color: var(--color-danger);
+  background: transparent;
+}
+.dash-btn-danger:hover:not(:disabled) {
+  background-color: rgba(212, 103, 79, 0.12);
+}
+.dash-btn-sm {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+/* ── Surfaces ──────────────────────────────────────────────────── */
+.dash-card {
+  background-color: var(--color-stone-850);
+  border: 1px solid rgba(240, 236, 226, 0.1);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.dash-tab {
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-ink-sand);
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.dash-tab:hover {
+  color: var(--color-ink-ivory);
+  background-color: var(--color-stone-800);
+}
+.dash-tab[aria-selected="true"] {
+  background-color: var(--color-ink-gold);
+  color: var(--color-stone-950);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
