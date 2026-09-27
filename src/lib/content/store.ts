@@ -92,7 +92,7 @@ export async function getContent(): Promise<SiteContent> {
   if (process.env.VERCEL) {
     try {
       const result = await get(BLOB_CONTENT_FILE, {
-        access: "private",
+        access: "public",
         useCache: false,
       });
 
@@ -125,7 +125,7 @@ export async function saveContent(content: SiteContent): Promise<void> {
 
   if (process.env.VERCEL) {
     await put(BLOB_CONTENT_FILE, json, {
-      access: "private",
+      access: "public",
       allowOverwrite: true,
     });
 

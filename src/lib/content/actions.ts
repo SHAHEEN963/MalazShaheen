@@ -74,18 +74,13 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
       // The deployment filesystem is read-only (writing there failed with
       // ENOENT on /var/task/public), so images go to Vercel Blob.
       //
-      // The store is configured with private access, which rejects
-      // access: "public" outright. Blobs are therefore written privately and
-      // served through /api/media, which streams them to the browser.
-      await put(`uploads/${filename}`, file, {
-        access: "private",
+      // The store is public, so the returned URL is loadable by the browser
+      // directly and no proxy is involved.
+      const blob = await put(`uploads/${filename}`, file, {
+        access: "public",
         contentType: file.type,
       });
-      return {
-        ok: true,
-        path: `/api/media/uploads/${filename}`,
-        message: "تم رفع الصورة.",
-      };
+      return { ok: true, path: blob.url, message: "تم رفع الصورة." };
     }
 
     await fs.mkdir(UPLOAD_DIR, { recursive: true });

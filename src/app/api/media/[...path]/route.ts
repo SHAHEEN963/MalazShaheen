@@ -3,13 +3,12 @@ import { get } from "@vercel/blob";
 /**
  * Serves an uploaded picture out of the Vercel Blob store.
  *
- * The store is configured with **private** access, so blobs have no publicly
- * fetchable URL and `put({ access: "public" })` is rejected outright. Images
- * are therefore stored privately and streamed through here, which keeps the
- * store private while still letting the browser display them.
+ * The store is public now, so new uploads are referenced by their blob URL
+ * directly and never reach this route. It is kept so that any image saved
+ * while the store was private — stored as /api/media/uploads/… — still
+ * resolves instead of turning into a broken picture.
  *
- * Only the `uploads/` prefix is served: the content document lives at
- * `content/content.json` in the same store and must not be reachable this way.
+ * Only the `uploads/` prefix is served.
  */
 export async function GET(
   _request: Request,
@@ -25,7 +24,7 @@ export async function GET(
   }
 
   try {
-    const result = await get(pathname, { access: "private" });
+    const result = await get(pathname, { access: "public" });
 
     if (!result || result.statusCode !== 200) {
       return new Response("Not found", { status: 404 });
