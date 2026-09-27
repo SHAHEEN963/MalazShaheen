@@ -42,7 +42,8 @@ export function Gallery({
    * content keeps working unchanged.
    */
   const slides = activeWork
-    ? activeWork.items.length > 0
+    ? // Guarded: content saved before `items` existed arrives without it.
+      Array.isArray(activeWork.items) && activeWork.items.length > 0
       ? activeWork.items
       : [
           {

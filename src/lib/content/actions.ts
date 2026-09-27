@@ -72,13 +72,20 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
   try {
     if (process.env.VERCEL) {
       // The deployment filesystem is read-only (writing there failed with
-      // ENOENT on /var/task/public), so images go to Vercel Blob. They must be
-      // public: the browser loads them straight from the returned URL.
-      const blob = await put(`uploads/${filename}`, file, {
-        access: "public",
+      // ENOENT on /var/task/public), so images go to Vercel Blob.
+      //
+      // The store is configured with private access, which rejects
+      // access: "public" outright. Blobs are therefore written privately and
+      // served through /api/media, which streams them to the browser.
+      await put(`uploads/${filename}`, file, {
+        access: "private",
         contentType: file.type,
       });
-      return { ok: true, path: blob.url, message: "تم رفع الصورة." };
+      return {
+        ok: true,
+        path: `/api/media/uploads/${filename}`,
+        message: "تم رفع الصورة.",
+      };
     }
 
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
@@ -97,10 +104,17 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
 export async function deleteUpload(publicPath: string): Promise<SaveResult> {
   await requireAdmin();
 
-  // A blob URL is deleted through the store it lives in.
-  if (/^https?:\/\//.test(publicPath)) {
+  // Blob-backed images: either a full URL, or the /api/media path that maps
+  // onto a pathname inside the store.
+  const blobTarget = /^https?:\/\//.test(publicPath)
+    ? publicPath
+    : publicPath.startsWith("/api/media/")
+      ? publicPath.slice("/api/media/".length)
+      : null;
+
+  if (blobTarget) {
     try {
-      await del(publicPath);
+      await del(blobTarget);
       return { ok: true, message: "حُذفت الصورة." };
     } catch {
       return { ok: true, message: "الصورة غير موجودة أصلًا." };
