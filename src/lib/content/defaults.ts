@@ -23,6 +23,8 @@ export const defaultContent: SiteContent = {
       "التذهيب وتشميع الورق",
     ],
     portrait: "",
+    logoHeader: "/brand/header-logo.svg",
+    logoHero: "/brand/hero-logo.svg",
   },
 
   stats: [
@@ -41,6 +43,7 @@ export const defaultContent: SiteContent = {
       description:
         "مجموعة زفاف كاملة بخط الديواني المذهّب، من بطاقة الحفظ وحتى لفافة القسم الأخيرة.",
       image: "",
+      items: [],
     },
     {
       id: "brand-almadina",
@@ -50,6 +53,7 @@ export const defaultContent: SiteContent = {
       description:
         "شعار حديث متجذّر في خط الثلث الكلاسيكي، مُهيّأ للّافتات والتغليف والقوائم المنقوشة.",
       image: "",
+      items: [],
     },
     {
       id: "invitation-royal-gala",
@@ -59,6 +63,7 @@ export const defaultContent: SiteContent = {
       description:
         "مجموعة دعوات مكتوبة يدويًا مع ختم شمعي وأوراق مُعرّقة لحفل استقبال رسمي.",
       image: "",
+      items: [],
     },
     {
       id: "envelopes-hadeel",
@@ -68,6 +73,7 @@ export const defaultContent: SiteContent = {
       description:
         "١٥٠ مظروفًا مكتوبًا يدويًا بخط الديواني الجلي المتدفّق، لكل منها لمسة فردية خفيّة.",
       image: "",
+      items: [],
     },
     {
       id: "certificate-honor",
@@ -77,6 +83,7 @@ export const defaultContent: SiteContent = {
       description:
         "شهادة احتفالية لجائزة فنية وطنية، محاطة بزخرفة هندسية مرسومة يدويًا.",
       image: "",
+      items: [],
     },
     {
       id: "editorial-quiet-ink",
@@ -85,6 +92,7 @@ export const defaultContent: SiteContent = {
       year: "٢٠٢٢",
       description: "ست صفحات لمجلة تصميم تستكشف الفراغ في خط النسخ المعاصر.",
       image: "",
+      items: [],
     },
     {
       id: "bespoke-family-tree",
@@ -94,6 +102,7 @@ export const defaultContent: SiteContent = {
       description:
         "لفافة تراثية بتكليف خاص تتتبّع أربعة أجيال، بخط الرقعة وحدود مذهّبة.",
       image: "",
+      items: [],
     },
     {
       id: "lettering-poem-of-return",
@@ -102,6 +111,7 @@ export const defaultContent: SiteContent = {
       year: "٢٠٢١",
       description: "بيت شعر مؤطّر بخط ديواني حر معبّر، مكوّن من سطر واحد متصل.",
       image: "",
+      items: [],
     },
   ],
 
@@ -173,29 +183,8 @@ export const defaultContent: SiteContent = {
     },
   ],
 
-  testimonials: [
-    {
-      id: "layla",
-      quote:
-        "كل ضيف سأل من الذي خطّ دعواتنا. شعرنا وكأنها ليست قرطاسية بل عمل فني يحمل تفاصيل زفافنا.",
-      name: "ليلى ح.",
-      role: "عروس، عمّان",
-    },
-    {
-      id: "noor",
-      quote:
-        "حوّل اسم علامتنا التجارية إلى شعار يبدو عريقًا وجديدًا في آنٍ واحد. استحق كل يوم انتظرناه.",
-      name: "استوديو نور",
-      role: "مديرة العلامة التجارية",
-    },
-    {
-      id: "rami",
-      quote:
-        "مشاهدته يعمل مباشرة في حفلنا كانت أخّاذة — لا يزال ضيوفنا يتحدثون عن الخطاط أكثر من الكعكة.",
-      name: "رامي ودانا",
-      role: "عروسان",
-    },
-  ],
+  // Reviews are published as pictures; upload them from the dashboard.
+  testimonials: [],
 
   contact: {
     // wa.me expects the international number with no "+" and no leading "00".
@@ -210,6 +199,17 @@ export const defaultContent: SiteContent = {
   },
 
   sections: {
+    header: {
+      links: [
+        { id: "about", label: "المرسم", href: "#about" },
+        { id: "works", label: "المعرض", href: "#works" },
+        { id: "services", label: "الخدمات", href: "#services" },
+        { id: "process", label: "الرحلة", href: "#process" },
+        { id: "voices", label: "الأصوات", href: "#voices" },
+        { id: "showcase", label: "الحبر", href: "#showcase" },
+        { id: "contact", label: "التواصل", href: "#contact" },
+      ],
+    },
     hero: {
       ctaPrimary: "ادخل المعرض",
       ctaSecondary: "احجز مشروعًا",

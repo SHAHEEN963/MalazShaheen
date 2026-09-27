@@ -17,13 +17,23 @@ export default async function Home() {
   const { artist, stats, works, services, process, testimonials, contact, sections } =
     await getContent();
 
+  // Voices only renders once a review image exists, so its nav link must go
+  // too — otherwise it would scroll nowhere.
+  const hasVoices = testimonials.some((t) => t.image);
+  const headerCopy = {
+    ...sections.header,
+    links: sections.header.links.filter(
+      (link) => hasVoices || link.href !== "#voices"
+    ),
+  };
+
   return (
     <>
       <Backdrop />
       <div className="vignette" aria-hidden="true" />
       <div className="paper-grain" aria-hidden="true" />
       <InkTrail />
-      <Nav artist={artist} />
+      <Nav artist={artist} copy={headerCopy} />
       <JourneyRail />
 
       <main className="relative z-10">

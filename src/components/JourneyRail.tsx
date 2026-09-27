@@ -19,6 +19,9 @@ export function JourneyRail() {
   const isSmall = useIsCoarseOrSmall();
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
+  // A room with nothing in it (no reviews uploaded yet) is not on the page,
+  // so it must not get a rail entry that scrolls nowhere.
+  const [present, setPresent] = useState<string[]>(() => rooms.map((r) => r.id));
 
   useEffect(() => {
     if (isSmall) return;
@@ -27,13 +30,17 @@ export function JourneyRail() {
       const max = doc.scrollHeight - doc.clientHeight;
       setProgress(max > 0 ? Math.min(1, Math.max(0, doc.scrollTop / max)) : 0);
 
+      const onPage: string[] = [];
       let current = 0;
       rooms.forEach((room, i) => {
         const el = document.getElementById(room.id);
-        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.45) {
+        if (!el) return;
+        onPage.push(room.id);
+        if (el.getBoundingClientRect().top <= window.innerHeight * 0.45) {
           current = i;
         }
       });
+      setPresent(onPage);
       setActive(current);
     };
     onScroll();
@@ -62,7 +69,12 @@ export function JourneyRail() {
           className="absolute start-[3px] top-0 w-px bg-[linear-gradient(to_bottom,var(--color-ink-gold),var(--color-ink-gold-light))] transition-[height] duration-500 ease-out"
           style={{ height: `${progress * 100}%` }}
         />
-        {rooms.map((room, i) => (
+        {rooms
+          .filter((room) => present.includes(room.id))
+          .map((room) => {
+            // Compare by id: the filtered list no longer shares indices with `rooms`.
+            const isActive = rooms[active]?.id === room.id;
+            return (
           <a
             key={room.id}
             href={`#${room.id}`}
@@ -70,7 +82,7 @@ export function JourneyRail() {
           >
             <span
               className={`block rounded-full transition-all duration-400 ${
-                i === active
+                isActive
                   ? "h-[7px] w-[7px] bg-ink-gold shadow-[0_0_12px_2px_rgba(201,162,75,0.55)]"
                   : "h-[7px] w-[7px] bg-ink-ivory/25 group-hover:bg-ink-gold/70"
               }`}
@@ -78,7 +90,7 @@ export function JourneyRail() {
             />
             <span
               className={`whitespace-nowrap font-ui text-[0.78rem] font-bold transition-all duration-400 ${
-                i === active
+                isActive
                   ? "text-ink-gold opacity-100"
                   : "text-ink-sand opacity-0 group-hover:opacity-80"
               }`}
@@ -86,7 +98,8 @@ export function JourneyRail() {
               {room.index} — {room.label}
             </span>
           </a>
-        ))}
+            );
+          })}
       </div>
     </nav>
   );

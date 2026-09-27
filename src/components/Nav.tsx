@@ -4,17 +4,16 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SiteContent } from "@/lib/content/types";
 
-const links = [
-  { href: "#about", label: "المرسم" },
-  { href: "#works", label: "المعرض" },
-  { href: "#services", label: "الخدمات" },
-  { href: "#process", label: "الرحلة" },
-  { href: "#voices", label: "الأصوات" },
-  { href: "#showcase", label: "الحبر" },
-  { href: "#contact", label: "التواصل" },
-];
-
-export function Nav({ artist }: { artist: SiteContent["artist"] }) {
+export function Nav({
+  artist,
+  copy,
+}: {
+  artist: SiteContent["artist"];
+  copy: SiteContent["sections"]["header"];
+}) {
+  // The page filters out links to rooms it isn't rendering, so every entry
+  // here points at a section that actually exists.
+  const links = copy.links;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -36,14 +35,27 @@ export function Nav({ artist }: { artist: SiteContent["artist"] }) {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <a
           href="#hero"
-          className="font-display text-xl font-black text-ink-gold transition-opacity hover:opacity-70"
+          className="flex items-center transition-opacity hover:opacity-70"
+          aria-label={artist.name}
         >
-          {artist.name}
+          {artist.logoHeader ? (
+            // Height matches the 28px the wordmark text used to occupy.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={artist.logoHeader}
+              alt={artist.name}
+              className="h-7 w-auto"
+            />
+          ) : (
+            <span className="font-display text-xl font-black text-ink-gold">
+              {artist.name}
+            </span>
+          )}
         </a>
 
         <ul className="hidden items-center gap-9 md:flex">
           {links.map((link) => (
-            <li key={link.href}>
+            <li key={link.id}>
               <a
                 href={link.href}
                 className="group relative font-ui text-sm font-bold text-ink-sand transition-colors hover:text-ink-gold"
@@ -90,7 +102,7 @@ export function Nav({ artist }: { artist: SiteContent["artist"] }) {
             className="flex flex-col gap-1 overflow-hidden bg-stone-900/95 px-6 pb-6 backdrop-blur-xl md:hidden"
           >
             {links.map((link) => (
-              <li key={link.href}>
+              <li key={link.id}>
                 <a
                   href={link.href}
                   onClick={() => setMenuOpen(false)}

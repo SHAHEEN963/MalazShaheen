@@ -85,8 +85,8 @@ function buildGlyphs(count: number): Glyph[] {
     spin: (hash(i * 4.4 + 5) - 0.5) * 0.22,
     tilt: (hash(i * 6.6 + 6) - 0.5) * 1.2,
     gold: hash(i * 8.1 + 7) > 0.45,
-    // Kept low so the field reads as atmosphere behind the type, not clutter.
-    opacity: 0.09 + hash(i * 9.3 + 8) * 0.3,
+    // Kept very faint so the field reads as atmosphere behind the type.
+    opacity: 0.05 + hash(i * 9.3 + 8) * 0.17,
   }));
 }
 

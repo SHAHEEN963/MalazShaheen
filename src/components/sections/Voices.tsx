@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SiteContent } from "@/lib/content/types";
 import { RoomTag } from "../RoomTag";
 
 /**
  * Room 06 — الأصوات.
- * The one bright room. Driven by the arrows (or a swipe / trackpad), never on
- * a timer — nobody should have to wait for a carousel to come back around.
+ * Reviews are published as pictures (screenshots of what clients sent), shown
+ * one at a time in a wide 16:9 frame. Arrows and keyboard both drive it; there
+ * is no timer, so nobody waits for a slide to come back around.
  */
 export function Voices({
   testimonials,
@@ -16,39 +17,31 @@ export function Voices({
   testimonials: SiteContent["testimonials"];
   copy: SiteContent["sections"]["voices"];
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [atStart, setAtStart] = useState(true);
-  const [atEnd, setAtEnd] = useState(false);
+  const slides = testimonials.filter((t) => t.image);
+  const [index, setIndex] = useState(0);
 
-  const updateEdges = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    // In RTL, scrollLeft runs negative from 0 — normalise to a distance.
-    const scrolled = Math.abs(el.scrollLeft);
-    const max = el.scrollWidth - el.clientWidth;
-    setAtStart(scrolled <= 4);
-    setAtEnd(scrolled >= max - 4);
-  }, []);
+  const go = useCallback(
+    (direction: 1 | -1) => {
+      setIndex((i) => (i + direction + slides.length) % slides.length);
+    },
+    [slides.length]
+  );
 
   useEffect(() => {
-    updateEdges();
-    const el = trackRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", updateEdges, { passive: true });
-    window.addEventListener("resize", updateEdges);
-    return () => {
-      el.removeEventListener("scroll", updateEdges);
-      window.removeEventListener("resize", updateEdges);
+    if (slides.length < 2) return;
+    const onKey = (e: KeyboardEvent) => {
+      // RTL: ArrowRight moves to the previous slide.
+      if (e.key === "ArrowRight") go(-1);
+      if (e.key === "ArrowLeft") go(1);
     };
-  }, [updateEdges]);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go, slides.length]);
 
-  const nudge = useCallback((direction: 1 | -1) => {
-    const el = trackRef.current;
-    if (!el) return;
-    const card = el.querySelector("figure");
-    const step = card ? card.getBoundingClientRect().width + 24 : 380;
-    el.scrollBy({ left: direction * step, behavior: "smooth" });
-  }, []);
+  // Nothing uploaded yet — leave the room out rather than show an empty frame.
+  if (slides.length === 0) return null;
+
+  const current = slides[Math.min(index, slides.length - 1)];
 
   return (
     <section
@@ -64,60 +57,61 @@ export function Voices({
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => nudge(1)}
-              disabled={atStart}
-              aria-label="السابق"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-ink-gold"
-            >
-              →
-            </button>
-            <button
-              type="button"
-              onClick={() => nudge(-1)}
-              disabled={atEnd}
-              aria-label="التالي"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-ink-gold"
-            >
-              ←
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div
-        ref={trackRef}
-        className="mt-14 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {testimonials.map((quote) => (
-          <figure
-            key={quote.name}
-            className="w-[320px] shrink-0 snap-start border border-ink-ivory/12 bg-stone-850 p-8 transition-transform duration-500 hover:-translate-y-2 sm:w-[420px]"
-          >
-            <span
-              aria-hidden="true"
-              className="font-display block text-5xl leading-none text-ink-gold/60"
-            >
-              ”
-            </span>
-            <blockquote className="mt-4 font-editorial text-lg leading-[1.9] text-ink-ivory/90">
-              {quote.quote}
-            </blockquote>
-            <figcaption className="mt-6 flex items-center gap-3">
-              <span className="h-px w-8 bg-ink-gold" />
-              <span>
-                <span className="block font-ui text-sm font-bold text-ink-gold-light">
-                  {quote.name}
-                </span>
-                <span className="block font-ui text-xs text-ink-sand/70">
-                  {quote.role}
-                </span>
+          {slides.length > 1 && (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => go(-1)}
+                aria-label="السابق"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
+              >
+                →
+              </button>
+              <span className="font-ui text-sm tabular-nums text-ink-sand">
+                {index + 1} / {slides.length}
               </span>
-            </figcaption>
-          </figure>
-        ))}
+              <button
+                type="button"
+                onClick={() => go(1)}
+                aria-label="التالي"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
+              >
+                ←
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Wide frame — every review sits in the same 16:9 window */}
+        <div
+          className="relative mt-12 aspect-[16/9] w-full overflow-hidden rounded-sm border border-ink-gold/30 bg-stone-950 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]"
+          aria-live="polite"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            key={current.id}
+            src={current.image}
+            alt={current.caption || "تقييم عميل"}
+            className="h-full w-full object-contain"
+          />
+        </div>
+
+        {slides.length > 1 && (
+          <div className="mt-6 flex justify-center gap-2">
+            {slides.map((slide, i) => (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={`التقييم ${i + 1}`}
+                aria-current={i === index}
+                className={`h-1.5 w-8 rounded-full transition-colors ${
+                  i === index ? "bg-ink-gold" : "bg-ink-ivory/25 hover:bg-ink-gold/60"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

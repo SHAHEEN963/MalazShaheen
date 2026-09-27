@@ -90,7 +90,13 @@ export function Studio({
 
             <div className="rule-gold my-10" />
 
-            <div className="grid gap-8 sm:grid-cols-2">
+            {/* A lone paragraph spans the full column so it lines up with the
+                rule and the heading above it instead of stopping halfway. */}
+            <div
+              className={`grid gap-8 ${
+                artist.bio.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"
+              }`}
+            >
               {artist.bio.map((paragraph, i) => (
                 <motion.p
                   key={i}

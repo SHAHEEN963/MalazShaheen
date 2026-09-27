@@ -7,6 +7,7 @@ import { Field, ImagePicker, ListEditor, StringListEditor, TextArea } from "./fi
 
 const TABS = [
   { id: "artist", label: "الفنان" },
+  { id: "header", label: "الهيدر" },
   { id: "works", label: "الأعمال" },
   { id: "services", label: "الخدمات" },
   { id: "process", label: "الرحلة" },
@@ -112,6 +113,7 @@ export function Editor({
                 year: "",
                 description: "",
                 image: "",
+                items: [],
               })}
               summary={(w) => `${w.title}${w.category ? ` — ${w.category}` : ""}`}
               renderItem={(work, update) => (
@@ -131,11 +133,52 @@ export function Editor({
                     onChange={(description) => update({ description })}
                   />
                   <ImagePicker
-                    label="صورة العمل"
+                    label="صورة الغلاف"
                     value={work.image}
                     onChange={(image) => update({ image })}
-                    hint="بدون صورة يظهر أول حرف من العنوان كعلامة ذهبية."
+                    hint="تظهر على الشريحة في المعرض. بدون صورة يظهر أول حرف من العنوان."
                   />
+
+                  <div className="border-t border-white/10 pt-4">
+                    <p className="dash-label">القطع داخل هذه الشريحة</p>
+                    <p className="mb-3 text-xs leading-relaxed text-ink-sand/70">
+                      أضف عدة أعمال داخل الشريحة نفسها؛ يتنقّل الزائر بينها
+                      بالأسهم في النافذة المنبثقة. إن تركتها فارغة ستُعرض بيانات
+                      الشريحة أعلاه كقطعة واحدة.
+                    </p>
+                    <ListEditor
+                      items={work.items}
+                      onChange={(items) => update({ items })}
+                      addLabel="أضف قطعة"
+                      makeNew={() => ({
+                        id: newId("item"),
+                        title: "",
+                        description: "",
+                        image: "",
+                      })}
+                      summary={(it) => it.title}
+                      emptyLabel="لا قطع إضافية — ستُعرض الشريحة كقطعة واحدة."
+                      renderItem={(item, updateItem) => (
+                        <>
+                          <Field
+                            label="العنوان"
+                            value={item.title}
+                            onChange={(title) => updateItem({ title })}
+                          />
+                          <TextArea
+                            label="الشرح"
+                            value={item.description}
+                            onChange={(description) => updateItem({ description })}
+                          />
+                          <ImagePicker
+                            label="الصورة"
+                            value={item.image}
+                            onChange={(image) => updateItem({ image })}
+                          />
+                        </>
+                      )}
+                    />
+                  </div>
                 </>
               )}
             />
@@ -208,29 +251,37 @@ export function Editor({
 
         {tab === "testimonials" && (
           <section className="flex flex-col gap-4">
-            <SectionIntro title="الآراء" description="شهادات العملاء في قسم الأصوات." />
+            <SectionIntro
+              title="الآراء"
+              description="تُعرض كصور في إطار عرضي ١٦:٩. ارفع لقطة شاشة لكل تقييم. إن لم تضف أي تقييم لن يظهر القسم إطلاقًا."
+            />
             <ListEditor
               items={content.testimonials}
               onChange={(testimonials) => patch({ testimonials })}
-              addLabel="أضف رأيًا"
-              makeNew={() => ({ id: newId("quote"), quote: "", name: "", role: "" })}
-              summary={(t) => t.name}
+              addLabel="أضف تقييمًا"
+              makeNew={() => ({ id: newId("review"), image: "", caption: "" })}
+              summary={(t, i) => t.caption || `تقييم ${i + 1}`}
+              emptyLabel="لا تقييمات بعد — ارفع صورة لتظهر."
               renderItem={(item, update) => (
                 <>
-                  <TextArea
-                    label="النص"
-                    value={item.quote}
-                    onChange={(quote) => update({ quote })}
+                  <ImagePicker
+                    label="صورة التقييم"
+                    value={item.image}
+                    onChange={(image) => update({ image })}
+                    hint="يفضل قياس عرضي ١٦:٩ لتملأ الإطار دون فراغ."
                   />
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="الاسم" value={item.name} onChange={(name) => update({ name })} />
-                    <Field label="الصفة" value={item.role} onChange={(role) => update({ role })} />
-                  </div>
+                  <Field
+                    label="وصف الصورة (لقارئ الشاشة)"
+                    value={item.caption}
+                    onChange={(caption) => update({ caption })}
+                  />
                 </>
               )}
             />
           </section>
         )}
+
+        {tab === "header" && <HeaderTab content={content} patch={patch} />}
 
         {tab === "contact" && (
           <ContactTab content={content} patch={patch} />
@@ -396,6 +447,74 @@ function ArtistTab({
                 label="التسمية"
                 value={stat.label}
                 onChange={(label) => update({ label })}
+              />
+            </div>
+          )}
+        />
+      </div>
+    </section>
+  );
+}
+
+function HeaderTab({
+  content,
+  patch,
+}: {
+  content: SiteContent;
+  patch: (update: Partial<SiteContent>) => void;
+}) {
+  const { artist, sections } = content;
+
+  return (
+    <section className="flex flex-col gap-6">
+      <SectionIntro
+        title="الهيدر"
+        description="الشعار في الشريط العلوي وفي الواجهة، وعناوين روابط التنقل."
+      />
+
+      <div className="dash-card flex flex-col gap-5">
+        <ImagePicker
+          label="شعار الشريط العلوي"
+          value={artist.logoHeader}
+          onChange={(logoHeader) => patch({ artist: { ...artist, logoHeader } })}
+          hint="يعرض بارتفاع ٢٨ بكسل. اتركه فارغًا ليظهر الاسم كنص."
+        />
+        <ImagePicker
+          label="شعار الواجهة الكبير"
+          value={artist.logoHero}
+          onChange={(logoHero) => patch({ artist: { ...artist, logoHero } })}
+          hint="يتبع عرضه حجم الشاشة. اتركه فارغًا ليظهر الاسم كنص."
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <SectionIntro
+          title="روابط التنقل"
+          description="الترتيب هنا هو ترتيب ظهورها في الشريط العلوي."
+        />
+        <ListEditor
+          items={sections.header.links}
+          onChange={(links) =>
+            patch({
+              sections: { ...sections, header: { ...sections.header, links } },
+            })
+          }
+          addLabel="أضف رابطًا"
+          makeNew={() => ({ id: newId("link"), label: "", href: "#" })}
+          summary={(l) => l.label}
+          renderItem={(link, update) => (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="العنوان"
+                value={link.label}
+                onChange={(label) => update({ label })}
+              />
+              <Field
+                label="الوجهة"
+                value={link.href}
+                onChange={(href) => update({ href })}
+                dir="ltr"
+                placeholder="#works"
               />
             </div>
           )}

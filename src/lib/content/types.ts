@@ -1,13 +1,26 @@
 /** The complete, editable content of the calligraphy site. */
 
+/** One slide inside a work's detail carousel. */
+export type WorkItem = {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+};
+
 export type Work = {
   id: string;
   title: string;
   category: string;
   year: string;
   description: string;
-  /** Public path such as /uploads/abc.jpg, or "" for the lettermark placeholder. */
+  /** Cover shown on the cylinder card: a public path, or "" for the lettermark. */
   image: string;
+  /**
+   * Extra pieces shown as a carousel when the work is opened. When empty the
+   * modal falls back to a single slide built from the fields above.
+   */
+  items: WorkItem[];
 };
 
 export type Service = {
@@ -23,11 +36,12 @@ export type ProcessStep = {
   description: string;
 };
 
+/** A client review, published as an image (a screenshot of the message). */
 export type Testimonial = {
   id: string;
-  quote: string;
-  name: string;
-  role: string;
+  image: string;
+  /** Read out to screen readers in place of the picture. */
+  caption: string;
 };
 
 export type SocialLink = {
@@ -52,6 +66,10 @@ export type Artist = {
   specialties: string[];
   /** Public path to the portrait, or "" to fall back to the gold lettermark. */
   portrait: string;
+  /** Wordmark in the top bar. "" falls back to the name as text. */
+  logoHeader: string;
+  /** Large wordmark in the hero. "" falls back to the name as text. */
+  logoHero: string;
 };
 
 export type Contact = {
@@ -68,7 +86,15 @@ export type SectionCopy = {
   intro: string;
 };
 
+export type NavLink = {
+  id: string;
+  label: string;
+  href: string;
+};
+
 export type Sections = {
+  /** The top bar: its navigation entries. */
+  header: { links: NavLink[] };
   hero: { ctaPrimary: string; ctaSecondary: string; scrollHint: string };
   studio: SectionCopy;
   gallery: SectionCopy & { cardHint: string; detailCta: string };

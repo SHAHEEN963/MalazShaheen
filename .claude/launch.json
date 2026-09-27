@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "-p", "3005"],
       "port": 3005
+    },
+    {
+      "name": "urfolio-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/SHAHEEN/URfolio", "run", "dev", "--", "-p", "3010"],
+      "port": 3010
     }
   ]
 }

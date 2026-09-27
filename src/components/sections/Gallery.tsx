@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
@@ -34,6 +34,43 @@ export function Gallery({
   const activeIndex =
     ((Math.round(-rotation / STEP) % works.length) + works.length) % works.length;
   const activeWork = works.find((w) => w.id === openId) ?? null;
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  /**
+   * The pieces shown inside one work. A work with no extra items still gets a
+   * single slide built from its own cover, title and description, so older
+   * content keeps working unchanged.
+   */
+  const slides = activeWork
+    ? activeWork.items.length > 0
+      ? activeWork.items
+      : [
+          {
+            id: activeWork.id,
+            image: activeWork.image,
+            title: activeWork.title,
+            description: activeWork.description,
+          },
+        ]
+    : [];
+
+  const slide = slides[Math.min(slideIndex, Math.max(slides.length - 1, 0))];
+
+  const slideCount = slides.length;
+  const stepSlide = useCallback(
+    (direction: 1 | -1) => {
+      setSlideIndex((i) =>
+        slideCount > 0 ? (i + direction + slideCount) % slideCount : 0
+      );
+    },
+    [slideCount]
+  );
+
+  // Opening a work always starts on its first piece.
+  const openWork = useCallback((id: string) => {
+    setOpenId(id);
+    setSlideIndex(0);
+  }, []);
 
   // Slow drift while nobody is touching it — the cylinder feels alive.
   useEffect(() => {
@@ -55,6 +92,9 @@ export function Gallery({
     if (!openId) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpenId(null);
+      // RTL: ArrowRight steps back through the pieces of this work.
+      if (e.key === "ArrowRight") stepSlide(-1);
+      if (e.key === "ArrowLeft") stepSlide(1);
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -62,7 +102,7 @@ export function Gallery({
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [openId]);
+  }, [openId, stepSlide]);
 
   function snap(to: number) {
     idleRef.current = false;
@@ -165,7 +205,7 @@ export function Gallery({
               <button
                 key={work.id}
                 type="button"
-                onClick={() => (isActive ? setOpenId(work.id) : snap(-cardAngle))}
+                onClick={() => (isActive ? openWork(work.id) : snap(-cardAngle))}
                 aria-label={`${work.title} — ${work.category}`}
                 className="absolute start-1/2 top-1/2 block h-[300px] w-[210px] sm:h-[360px] sm:w-[250px]"
                 style={{
@@ -236,7 +276,7 @@ export function Gallery({
 
       {/* Detail takeover — slides in from the reading edge */}
       <AnimatePresence>
-        {activeWork && (
+        {activeWork && slide && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -263,25 +303,54 @@ export function Gallery({
               >
                 إغلاق ✕
               </button>
-              {activeWork.image && (
+
+              {slide.image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={activeWork.image}
-                  alt={activeWork.title}
+                  key={slide.id}
+                  src={slide.image}
+                  alt={slide.title}
                   className="max-h-[38vh] w-full rounded-sm border border-ink-gold/25 object-cover"
                 />
               )}
+
               <span className="font-ui text-xs tracking-wide text-ink-gold">
                 {activeWork.category} · {activeWork.year}
               </span>
-              <h3 className="font-display text-[clamp(2rem,6vw,3.5rem)] leading-tight text-ink-ivory">
-                {activeWork.title}
+              <h3 className="font-display text-[clamp(1.7rem,5vw,3rem)] leading-tight text-ink-ivory">
+                {slide.title}
               </h3>
               <div className="rule-gold" />
               <p className="font-editorial text-lg leading-[1.9] text-ink-sand">
-                {activeWork.description}
+                {slide.description}
               </p>
-              <a href="#contact" className="btn btn-ghost mt-4 self-start">
+
+              {/* Move between the pieces that make up this one work */}
+              {slides.length > 1 && (
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => stepSlide(-1)}
+                    aria-label="القطعة السابقة"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-gold/40 text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
+                  >
+                    →
+                  </button>
+                  <span className="font-ui text-sm tabular-nums text-ink-sand">
+                    {slideIndex + 1} / {slides.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => stepSlide(1)}
+                    aria-label="القطعة التالية"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-gold/40 text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
+                  >
+                    ←
+                  </button>
+                </div>
+              )}
+
+              <a href="#contact" className="btn btn-ghost mt-2 self-start">
                 {copy.detailCta}
               </a>
             </motion.div>

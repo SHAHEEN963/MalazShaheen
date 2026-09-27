@@ -82,7 +82,17 @@ export function Hero({
                the baseline; a tight line-height was cropping it. */
             className="font-display text-gold-foil pb-[0.22em] text-[clamp(3.4rem,14vw,11rem)] leading-[1.24] drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
           >
-            {artist.name}
+            {artist.logoHero ? (
+              /* Width tracks the type it replaces: ~774px at a 1440 viewport. */
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={artist.logoHero}
+                alt={artist.name}
+                className="w-[clamp(260px,54vw,820px)] h-auto"
+              />
+            ) : (
+              artist.name
+            )}
           </motion.h1>
         </div>
 
