@@ -3,9 +3,10 @@
 import { promises as fs } from "node:fs";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
+import { del, put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/admin";
-import { getContent, isWritable, saveContent } from "./store";
+import { getContent, saveContent } from "./store";
 import type { SiteContent } from "./types";
 
 export type SaveResult = { ok: boolean; message: string };
@@ -52,13 +53,6 @@ export type UploadResult = { ok: boolean; path?: string; message: string };
 export async function uploadImage(formData: FormData): Promise<UploadResult> {
   await requireAdmin();
 
-  if (!isWritable()) {
-    return {
-      ok: false,
-      message: "رفع الصور غير متاح في بيئة النشر الحالية (نظام ملفات للقراءة فقط).",
-    };
-  }
-
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, message: "لم يُختَر ملف." };
@@ -72,10 +66,22 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
     return { ok: false, message: "صيغة غير مدعومة. استخدم JPG أو PNG أو WEBP أو AVIF." };
   }
 
+  // Generated name: never trust the client-supplied filename for a path.
+  const filename = `${randomUUID()}${extension}`;
+
   try {
+    if (process.env.VERCEL) {
+      // The deployment filesystem is read-only (writing there failed with
+      // ENOENT on /var/task/public), so images go to Vercel Blob. They must be
+      // public: the browser loads them straight from the returned URL.
+      const blob = await put(`uploads/${filename}`, file, {
+        access: "public",
+        contentType: file.type,
+      });
+      return { ok: true, path: blob.url, message: "تم رفع الصورة." };
+    }
+
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    // Generated name: never trust the client-supplied filename for a path.
-    const filename = `${randomUUID()}${extension}`;
     const bytes = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(path.join(UPLOAD_DIR, filename), bytes);
     return { ok: true, path: `/uploads/${filename}`, message: "تم رفع الصورة." };
@@ -91,7 +97,17 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
 export async function deleteUpload(publicPath: string): Promise<SaveResult> {
   await requireAdmin();
 
-  // Only ever touch files directly inside public/uploads.
+  // A blob URL is deleted through the store it lives in.
+  if (/^https?:\/\//.test(publicPath)) {
+    try {
+      await del(publicPath);
+      return { ok: true, message: "حُذفت الصورة." };
+    } catch {
+      return { ok: true, message: "الصورة غير موجودة أصلًا." };
+    }
+  }
+
+  // Otherwise only ever touch files directly inside public/uploads.
   const name = path.basename(publicPath);
   if (!publicPath.startsWith("/uploads/") || name !== publicPath.slice("/uploads/".length)) {
     return { ok: false, message: "مسار غير صالح." };

@@ -350,7 +350,13 @@ export function Gallery({
                 </div>
               )}
 
-              <a href="#contact" className="btn btn-ghost mt-2 self-start">
+              {/* Close on the way out, or the work would stay open behind
+                  the contact section the link jumps to. */}
+              <a
+                href="#contact"
+                onClick={() => setOpenId(null)}
+                className="btn btn-ghost mt-2 self-start"
+              >
                 {copy.detailCta}
               </a>
             </motion.div>
