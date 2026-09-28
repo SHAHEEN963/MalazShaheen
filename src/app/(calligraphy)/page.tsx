@@ -9,8 +9,17 @@ import { Offerings } from "@/components/sections/Offerings";
 import { Signature } from "@/components/sections/Signature";
 import { Studio } from "@/components/sections/Studio";
 import { Voices } from "@/components/sections/Voices";
-import { Backdrop } from "@/components/three/Backdrop";
 import { getContent } from "@/lib/content/store";
+
+/**
+ * Rendered per request.
+ *
+ * The content lives in a Blob the dashboard writes to, which Next has no way
+ * to tie a cache entry to, so a prerendered copy kept serving an older
+ * document — a saved review simply never appeared. Reading on each request
+ * costs a little latency and removes that whole class of confusion.
+ */
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   // Everything on this page comes from the dashboard-editable store.
@@ -29,7 +38,6 @@ export default async function Home() {
 
   return (
     <>
-      <Backdrop />
       <div className="vignette" aria-hidden="true" />
       <div className="paper-grain" aria-hidden="true" />
       <InkTrail />
