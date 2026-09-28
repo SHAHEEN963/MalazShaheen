@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { saveSiteContent } from "@/lib/content/actions";
 import type { SiteContent } from "@/lib/content/types";
-import { Field, ImagePicker, ListEditor, StringListEditor, TextArea } from "./fields";
+import {
+  DirectUploadContext,
+  Field,
+  ImagePicker,
+  ListEditor,
+  StringListEditor,
+  TextArea,
+} from "./fields";
 
 const TABS = [
   { id: "artist", label: "الفنان" },
@@ -27,10 +34,13 @@ export function Editor({
   initialContent,
   writable,
   storageNotice,
+  directUpload = false,
 }: {
   initialContent: SiteContent;
   writable: boolean;
   storageNotice: string;
+  /** Send pictures straight to Blob instead of through a Server Action. */
+  directUpload?: boolean;
 }) {
   const [content, setContent] = useState<SiteContent>(initialContent);
   const [tab, setTab] = useState<TabId>("artist");
@@ -62,6 +72,7 @@ export function Editor({
   }
 
   return (
+    <DirectUploadContext.Provider value={directUpload}>
     <div className="flex flex-col gap-6">
       {!writable && (
         <p
@@ -356,6 +367,7 @@ export function Editor({
         </div>
       </div>
     </div>
+    </DirectUploadContext.Provider>
   );
 }
 

@@ -12,7 +12,7 @@ import type { SiteContent } from "./types";
 export type SaveResult = { ok: boolean; message: string };
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -58,7 +58,7 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
     return { ok: false, message: "لم يُختَر ملف." };
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return { ok: false, message: "حجم الصورة أكبر من ٥ ميغابايت." };
+    return { ok: false, message: "حجم الصورة أكبر من ١٠ ميغابايت." };
   }
 
   const extension = ALLOWED_TYPES[file.type];

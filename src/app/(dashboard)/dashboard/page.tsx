@@ -34,6 +34,7 @@ export default async function DashboardPage() {
       <Editor
         initialContent={content}
         writable={writable}
+        directUpload={Boolean(process.env.VERCEL)}
         storageNotice="التخزين للقراءة فقط في بيئة النشر هذه، لذلك لن تُحفظ التعديلات. حرّر المحتوى محليًا ثم ارفعه بـ git، أو اربط مخزنًا دائمًا (راجع README)."
       />
     </div>

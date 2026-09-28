@@ -1,7 +1,24 @@
 "use client";
 
-import { useId, useState, useTransition, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useId,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
+import { upload } from "@vercel/blob/client";
 import { uploadImage } from "@/lib/content/actions";
+
+/**
+ * True where pictures should go from the browser straight to Vercel Blob.
+ *
+ * Server Actions refuse a body over 1MB, which is smaller than an ordinary
+ * phone photo, so the hosted dashboard uploads directly instead. Local
+ * development has no blob store and keeps using the Server Action.
+ */
+export const DirectUploadContext = createContext(false);
 
 export function Field({
   label,
@@ -254,15 +271,35 @@ export function ImagePicker({
   hint?: string;
 }) {
   const id = useId();
+  const directUpload = useContext(DirectUploadContext);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handleFile(file: File | undefined) {
     if (!file) return;
     setError(null);
-    const formData = new FormData();
-    formData.append("file", file);
+
     startTransition(async () => {
+      if (directUpload) {
+        try {
+          // A generated name keeps the client-supplied filename out of the URL.
+          const extension = file.name.includes(".")
+            ? file.name.slice(file.name.lastIndexOf(".")).toLowerCase()
+            : "";
+          const blob = await upload(`uploads/${crypto.randomUUID()}${extension}`, file, {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            contentType: file.type,
+          });
+          onChange(blob.url);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "تعذّر رفع الصورة.");
+        }
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
       const result = await uploadImage(formData);
       if (result.ok && result.path) {
         onChange(result.path);
