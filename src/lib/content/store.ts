@@ -102,36 +102,41 @@ function mergeWithDefaults<T>(base: T, saved: unknown): T {
  * Reads content from Vercel Blob in production,
  * or from data/content.json locally.
  */
+/** One attempt at the stored document. Returns null if it could not be read. */
+async function readBlobContent(useCache: boolean): Promise<unknown | null> {
+  const result = await get(BLOB_CONTENT_FILE, { access: "public", useCache });
+  if (!result || result.statusCode !== 200) return null;
+  return JSON.parse(await new Response(result.stream).text());
+}
+
 export async function getContent(): Promise<SiteContent> {
   if (process.env.VERCEL) {
-    try {
-      const result = await get(BLOB_CONTENT_FILE, {
-        access: "public",
-        useCache: false,
-      });
-
-      if (!result || result.statusCode !== 200) {
-        // Loud on purpose: falling back here serves older content, and doing
-        // that silently made a saved review look like it had vanished.
+    /**
+     * Origin first so a save is visible immediately, then the CDN copy.
+     *
+     * A single origin read was failing on perhaps a third of requests — always
+     * a fresh render, never a cache hit — and each failure quietly served the
+     * bundled seed, so a saved review appeared and vanished between refreshes.
+     * The CDN copy is at most a minute behind (saveContent caps it), which is
+     * a far better answer than pretending the content does not exist.
+     */
+    for (const useCache of [false, true]) {
+      try {
+        const parsed = await readBlobContent(useCache);
+        if (parsed) return normalise(mergeWithDefaults(defaultContent, parsed));
         console.error(
-          "[content] blob read did not return 200:",
-          result ? result.statusCode : "null result",
-          "— serving the bundled seed instead"
+          `[content] blob read (useCache=${useCache}) returned no document`
         );
-        return normalise(seedContent);
+      } catch (error) {
+        console.error(
+          `[content] blob read (useCache=${useCache}) failed:`,
+          error instanceof Error ? error.message : error
+        );
       }
-
-      const raw = await new Response(result.stream).text();
-
-      return normalise(mergeWithDefaults(defaultContent, JSON.parse(raw)));
-    } catch (error) {
-      console.error(
-        "[content] blob read failed:",
-        error instanceof Error ? error.message : error,
-        "— serving the bundled seed instead"
-      );
-      return normalise(seedContent);
     }
+
+    console.error("[content] every blob read failed — serving the bundled seed");
+    return normalise(seedContent);
   }
 
   try {
@@ -153,6 +158,10 @@ export async function saveContent(content: SiteContent): Promise<void> {
     await put(BLOB_CONTENT_FILE, json, {
       access: "public",
       allowOverwrite: true,
+      // The document is mutable, so it must not sit on the CDN for the default
+      // month. 60s is the floor the platform allows, and it bounds how stale
+      // the cached fallback read can ever be.
+      cacheControlMaxAge: 60,
     });
 
     return;
