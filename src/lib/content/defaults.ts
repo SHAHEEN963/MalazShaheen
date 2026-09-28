@@ -214,7 +214,7 @@ export const defaultContent: SiteContent = {
     hero: {
       ctaPrimary: "حمّل السيرة الذاتية",
       ctaSecondary: "احجز مشروعًا",
-      scrollHint: "٨ غرف",
+      scrollHint: "",
     },
     studio: { label: "المرسم", heading: "", intro: "" },
     gallery: {

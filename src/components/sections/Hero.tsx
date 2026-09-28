@@ -132,9 +132,11 @@ export function Hero({
         transition={{ delay: 2.4, duration: 1 }}
         className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3"
       >
-        <span className="font-ui text-[0.7rem] tracking-widest text-ink-sand/60">
-          {copy.scrollHint}
-        </span>
+        {copy.scrollHint && (
+          <span className="font-ui text-[0.7rem] tracking-widest text-ink-sand/60">
+            {copy.scrollHint}
+          </span>
+        )}
         <span className="block h-14 w-px bg-[linear-gradient(to_bottom,var(--color-ink-gold),transparent)]" />
       </motion.div>
     </section>
