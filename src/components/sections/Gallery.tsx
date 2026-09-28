@@ -97,10 +97,19 @@ export function Gallery({
       if (e.key === "ArrowRight") stepSlide(-1);
       if (e.key === "ArrowLeft") stepSlide(1);
     };
+    // Any attempt to scroll the page dismisses the work, so the reader is
+    // never left fighting a locked page to get back to the gallery.
+    const closeOnScroll = () => setOpenId(null);
+
     window.addEventListener("keydown", onKey);
+    window.addEventListener("wheel", closeOnScroll, { passive: true });
+    window.addEventListener("touchmove", closeOnScroll, { passive: true });
     document.body.style.overflow = "hidden";
+
     return () => {
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("wheel", closeOnScroll);
+      window.removeEventListener("touchmove", closeOnScroll);
       document.body.style.overflow = "";
     };
   }, [openId, stepSlide]);

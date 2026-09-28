@@ -55,6 +55,16 @@ export function Editor({
     setMessage(null);
   }, []);
 
+  /**
+   * Applies a transform to the live document. List editors use this so a slow
+   * image upload cannot write back a stale copy over edits made while it ran.
+   */
+  const patchWith = useCallback((fn: (current: SiteContent) => SiteContent) => {
+    setContent(fn);
+    setDirty(true);
+    setMessage(null);
+  }, []);
+
   // Warn before losing unsaved edits.
   useEffect(() => {
     if (!dirty) return;
@@ -104,7 +114,7 @@ export function Editor({
 
       <div className="flex flex-col gap-6 pb-28">
         {tab === "artist" && (
-          <ArtistTab content={content} patch={patch} />
+          <ArtistTab content={content} patch={patch} patchWith={patchWith} />
         )}
 
         {tab === "works" && (
@@ -115,7 +125,7 @@ export function Editor({
             />
             <ListEditor
               items={content.works}
-              onChange={(works) => patch({ works })}
+              onChange={(updater) => patchWith((c) => ({ ...c, works: updater(c.works) }))}
               addLabel="أضف عملًا"
               makeNew={() => ({
                 id: newId("work"),
@@ -159,7 +169,11 @@ export function Editor({
                     </p>
                     <ListEditor
                       items={work.items}
-                      onChange={(items) => update({ items })}
+                      onChange={(updater) =>
+                        update((currentWork) => ({
+                          items: updater(currentWork.items),
+                        }))
+                      }
                       addLabel="أضف قطعة"
                       makeNew={() => ({
                         id: newId("item"),
@@ -201,7 +215,7 @@ export function Editor({
             <SectionIntro title="الخدمات" description="قائمة الخدمات في قسم الخدمات." />
             <ListEditor
               items={content.services}
-              onChange={(services) => patch({ services })}
+              onChange={(updater) => patchWith((c) => ({ ...c, services: updater(c.services) }))}
               addLabel="أضف خدمة"
               makeNew={() => ({ id: newId("service"), title: "", description: "" })}
               summary={(s) => s.title}
@@ -231,7 +245,7 @@ export function Editor({
             />
             <ListEditor
               items={content.process}
-              onChange={(process) => patch({ process })}
+              onChange={(updater) => patchWith((c) => ({ ...c, process: updater(c.process) }))}
               addLabel="أضف مرحلة"
               makeNew={() => ({ id: newId("step"), step: "", title: "", description: "" })}
               summary={(s) => `${s.step} ${s.title}`}
@@ -268,7 +282,7 @@ export function Editor({
             />
             <ListEditor
               items={content.testimonials}
-              onChange={(testimonials) => patch({ testimonials })}
+              onChange={(updater) => patchWith((c) => ({ ...c, testimonials: updater(c.testimonials) }))}
               addLabel="أضف تقييمًا"
               makeNew={() => ({ id: newId("review"), image: "", caption: "" })}
               summary={(t, i) => t.caption || `تقييم ${i + 1}`}
@@ -292,10 +306,10 @@ export function Editor({
           </section>
         )}
 
-        {tab === "header" && <HeaderTab content={content} patch={patch} />}
+        {tab === "header" && <HeaderTab content={content} patch={patch} patchWith={patchWith} />}
 
         {tab === "contact" && (
-          <ContactTab content={content} patch={patch} />
+          <ContactTab content={content} patch={patch} patchWith={patchWith} />
         )}
 
         {tab === "sections" && (
@@ -383,9 +397,11 @@ function SectionIntro({ title, description }: { title: string; description: stri
 function ArtistTab({
   content,
   patch,
+  patchWith,
 }: {
   content: SiteContent;
   patch: (update: Partial<SiteContent>) => void;
+  patchWith: (fn: (current: SiteContent) => SiteContent) => void;
 }) {
   const { artist } = content;
   const set = (update: Partial<SiteContent["artist"]>) =>
@@ -428,14 +444,14 @@ function ArtistTab({
         <StringListEditor
           label="النبذة (كل فقرة على حدة)"
           items={artist.bio}
-          onChange={(bio) => set({ bio })}
+          onChange={(updater) => patchWith((c) => ({ ...c, artist: { ...c.artist, bio: updater(c.artist.bio) } }))}
           addLabel="أضف فقرة"
           multiline
         />
         <StringListEditor
           label="التخصصات"
           items={artist.specialties}
-          onChange={(specialties) => set({ specialties })}
+          onChange={(updater) => patchWith((c) => ({ ...c, artist: { ...c.artist, specialties: updater(c.artist.specialties) } }))}
           addLabel="أضف تخصصًا"
         />
       </div>
@@ -444,7 +460,7 @@ function ArtistTab({
         <SectionIntro title="الأرقام" description="الإحصاءات الأربع في قسم المرسم." />
         <ListEditor
           items={content.stats}
-          onChange={(stats) => patch({ stats })}
+          onChange={(updater) => patchWith((c) => ({ ...c, stats: updater(c.stats) }))}
           addLabel="أضف رقمًا"
           makeNew={() => ({ id: newId("stat"), value: "", label: "" })}
           summary={(s) => `${s.value} ${s.label}`}
@@ -471,9 +487,11 @@ function ArtistTab({
 function HeaderTab({
   content,
   patch,
+  patchWith,
 }: {
   content: SiteContent;
   patch: (update: Partial<SiteContent>) => void;
+  patchWith: (fn: (current: SiteContent) => SiteContent) => void;
 }) {
   const { artist, sections } = content;
 
@@ -506,10 +524,14 @@ function HeaderTab({
         />
         <ListEditor
           items={sections.header.links}
-          onChange={(links) =>
-            patch({
-              sections: { ...sections, header: { ...sections.header, links } },
-            })
+          onChange={(updater) =>
+            patchWith((c) => ({
+              ...c,
+              sections: {
+                ...c.sections,
+                header: { ...c.sections.header, links: updater(c.sections.header.links) },
+              },
+            }))
           }
           addLabel="أضف رابطًا"
           makeNew={() => ({ id: newId("link"), label: "", href: "#" })}
@@ -539,9 +561,11 @@ function HeaderTab({
 function ContactTab({
   content,
   patch,
+  patchWith,
 }: {
   content: SiteContent;
   patch: (update: Partial<SiteContent>) => void;
+  patchWith: (fn: (current: SiteContent) => SiteContent) => void;
 }) {
   const { contact } = content;
   const set = (update: Partial<SiteContent["contact"]>) =>
@@ -579,7 +603,7 @@ function ContactTab({
         <SectionIntro title="روابط التواصل" description="تظهر أسفل قسم التوقيع." />
         <ListEditor
           items={contact.socials}
-          onChange={(socials) => set({ socials })}
+          onChange={(updater) => patchWith((c) => ({ ...c, contact: { ...c.contact, socials: updater(c.contact.socials) } }))}
           addLabel="أضف رابطًا"
           makeNew={() => ({ id: newId("social"), label: "", href: "" })}
           summary={(s) => s.label}

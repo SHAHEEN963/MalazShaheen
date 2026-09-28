@@ -97,30 +97,51 @@ export function ListEditor<T>({
   emptyLabel = "لا عناصر بعد.",
 }: {
   items: T[];
-  onChange: (items: T[]) => void;
+  /**
+   * Receives a transform rather than a finished array. An upload finishes
+   * seconds after it starts, and a snapshot captured back then would write
+   * over anything typed in the meantime — which silently dropped edits.
+   */
+  onChange: (updater: (current: T[]) => T[]) => void;
   makeNew: () => T;
   addLabel: string;
-  renderItem: (item: T, update: (patch: Partial<T>) => void, index: number) => ReactNode;
+  renderItem: (
+    item: T,
+    update: (patch: Partial<T> | ((current: T) => Partial<T>)) => void,
+    index: number
+  ) => ReactNode;
   summary: (item: T, index: number) => string;
   emptyLabel?: string;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  function update(index: number, patch: Partial<T>) {
-    onChange(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  function update(
+    index: number,
+    patch: Partial<T> | ((current: T) => Partial<T>)
+  ) {
+    onChange((current) =>
+      current.map((item, i) =>
+        i === index
+          ? { ...item, ...(typeof patch === "function" ? patch(item) : patch) }
+          : item
+      )
+    );
   }
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= items.length) return;
-    const next = [...items];
-    [next[index], next[target]] = [next[target], next[index]];
-    onChange(next);
+    onChange((current) => {
+      if (target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
     setOpenIndex((current) => (current === index ? target : current));
   }
 
   function remove(index: number) {
-    onChange(items.filter((_, i) => i !== index));
+    onChange((current) => current.filter((_, i) => i !== index));
     setOpenIndex(null);
   }
 
@@ -185,7 +206,7 @@ export function ListEditor<T>({
       <button
         type="button"
         onClick={() => {
-          onChange([...items, makeNew()]);
+          onChange((current) => [...current, makeNew()]);
           setOpenIndex(items.length);
         }}
         className="dash-btn dash-btn-ghost self-start"
@@ -206,7 +227,7 @@ export function StringListEditor({
 }: {
   label: string;
   items: string[];
-  onChange: (items: string[]) => void;
+  onChange: (updater: (current: string[]) => string[]) => void;
   addLabel: string;
   multiline?: boolean;
 }) {
@@ -223,7 +244,9 @@ export function StringListEditor({
                 value={value}
                 aria-label={`${label} ${index + 1}`}
                 onChange={(e) =>
-                  onChange(items.map((v, i) => (i === index ? e.target.value : v)))
+                  onChange((current) =>
+                    current.map((v, i) => (i === index ? e.target.value : v))
+                  )
                 }
               />
             ) : (
@@ -232,13 +255,17 @@ export function StringListEditor({
                 value={value}
                 aria-label={`${label} ${index + 1}`}
                 onChange={(e) =>
-                  onChange(items.map((v, i) => (i === index ? e.target.value : v)))
+                  onChange((current) =>
+                    current.map((v, i) => (i === index ? e.target.value : v))
+                  )
                 }
               />
             )}
             <button
               type="button"
-              onClick={() => onChange(items.filter((_, i) => i !== index))}
+              onClick={() =>
+                onChange((current) => current.filter((_, i) => i !== index))
+              }
               aria-label="حذف"
               className="dash-btn dash-btn-danger dash-btn-sm mt-1"
             >
@@ -248,7 +275,7 @@ export function StringListEditor({
         ))}
         <button
           type="button"
-          onClick={() => onChange([...items, ""])}
+          onClick={() => onChange((current) => [...current, ""])}
           className="dash-btn dash-btn-ghost dash-btn-sm self-start"
         >
           + {addLabel}
