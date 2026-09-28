@@ -57,7 +57,7 @@ export function JourneyRail() {
   return (
     <nav
       aria-label="غرف الموقع"
-      className="fixed inset-y-0 start-8 z-[55] hidden flex-col justify-center lg:flex"
+      className="journey-rail fixed inset-y-0 start-8 z-[55] hidden flex-col justify-center lg:flex"
     >
       <div className="relative flex flex-col gap-7 py-6">
         <span

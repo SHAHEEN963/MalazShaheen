@@ -97,6 +97,14 @@ b {
   }
 }
 
+/* The room rail gets out of the way while a work is open. No transition: the
+   rail must be gone the instant the work opens, not a third of a second later. */
+.work-open .journey-rail {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ── Texture overlays ── */
 .paper-grain {
   position: fixed;

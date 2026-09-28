@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
@@ -41,18 +42,21 @@ export function Gallery({
    * single slide built from its own cover, title and description, so older
    * content keeps working unchanged.
    */
+  /**
+   * The work's own cover — the picture shown on the cylinder — leads, then the
+   * pieces added to it. A work with no pieces is simply a single slide.
+   * (`items` is guarded: content saved before that field existed lacks it.)
+   */
   const slides = activeWork
-    ? // Guarded: content saved before `items` existed arrives without it.
-      Array.isArray(activeWork.items) && activeWork.items.length > 0
-      ? activeWork.items
-      : [
-          {
-            id: activeWork.id,
-            image: activeWork.image,
-            title: activeWork.title,
-            description: activeWork.description,
-          },
-        ]
+    ? [
+        {
+          id: `${activeWork.id}-cover`,
+          image: activeWork.image,
+          title: activeWork.title,
+          description: activeWork.description,
+        },
+        ...(Array.isArray(activeWork.items) ? activeWork.items : []),
+      ]
     : [];
 
   const slide = slides[Math.min(slideIndex, Math.max(slides.length - 1, 0))];
@@ -105,12 +109,15 @@ export function Gallery({
     window.addEventListener("wheel", closeOnScroll, { passive: true });
     window.addEventListener("touchmove", closeOnScroll, { passive: true });
     document.body.style.overflow = "hidden";
+    // Lets the room rail step aside while a work is being read.
+    document.documentElement.classList.add("work-open");
 
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("wheel", closeOnScroll);
       window.removeEventListener("touchmove", closeOnScroll);
       document.body.style.overflow = "";
+      document.documentElement.classList.remove("work-open");
     };
   }, [openId, stepSlide]);
 
@@ -285,8 +292,13 @@ export function Gallery({
       </div>
 
       {/* Detail takeover — slides in from the reading edge */}
-      <AnimatePresence>
-        {activeWork && slide && (
+      {/* Rendered into <body>: <main> carries z-10, which boxes every z-index
+          inside it, so the nav (z-60) and the room rail (z-55) painted over
+          this dialog no matter how high its own z-index went. */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {activeWork && slide && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -383,8 +395,10 @@ export function Gallery({
               </div>
             </motion.div>
           </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </section>
   );
 }
