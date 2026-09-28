@@ -102,6 +102,23 @@ function mergeWithDefaults<T>(base: T, saved: unknown): T {
  * Reads content from Vercel Blob in production,
  * or from data/content.json locally.
  */
+/**
+ * Last document we managed to read, kept per server instance.
+ *
+ * The page renders per request, so without this every visitor caused a blob
+ * read — and under that load the reads began failing, each failure dropping
+ * the site back to the bundled seed. Serving from memory for a few seconds
+ * removes almost all of those reads, and keeping the last good copy means a
+ * failed read costs freshness rather than content.
+ */
+let lastGood: { at: number; content: SiteContent } | null = null;
+const MEMORY_TTL_MS = 30_000;
+
+/** Dropped on save so an edit is visible immediately, not up to a TTL later. */
+export function invalidateContentCache(): void {
+  lastGood = null;
+}
+
 /** One attempt at the stored document. Returns null if it could not be read. */
 async function readBlobContent(useCache: boolean): Promise<unknown | null> {
   const result = await get(BLOB_CONTENT_FILE, { access: "public", useCache });
@@ -120,10 +137,18 @@ export async function getContent(): Promise<SiteContent> {
      * The CDN copy is at most a minute behind (saveContent caps it), which is
      * a far better answer than pretending the content does not exist.
      */
+    if (lastGood && Date.now() - lastGood.at < MEMORY_TTL_MS) {
+      return lastGood.content;
+    }
+
     for (const useCache of [false, true]) {
       try {
         const parsed = await readBlobContent(useCache);
-        if (parsed) return normalise(mergeWithDefaults(defaultContent, parsed));
+        if (parsed) {
+          const content = normalise(mergeWithDefaults(defaultContent, parsed));
+          lastGood = { at: Date.now(), content };
+          return content;
+        }
         console.error(
           `[content] blob read (useCache=${useCache}) returned no document`
         );
@@ -133,6 +158,14 @@ export async function getContent(): Promise<SiteContent> {
           error instanceof Error ? error.message : error
         );
       }
+    }
+
+    // A previously read document beats the seed: it is the real content, only
+    // a little old. The seed is a last resort for an instance that never
+    // managed a single successful read.
+    if (lastGood) {
+      console.error("[content] blob unreadable — serving the last good copy");
+      return lastGood.content;
     }
 
     console.error("[content] every blob read failed — serving the bundled seed");
@@ -164,6 +197,7 @@ export async function saveContent(content: SiteContent): Promise<void> {
       cacheControlMaxAge: 60,
     });
 
+    invalidateContentCache();
     return;
   }
 
