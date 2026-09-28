@@ -303,7 +303,7 @@ export function Gallery({
               exit={{ x: "100%" }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="absolute inset-y-0 end-0 flex w-full max-w-xl flex-col justify-center gap-6 bg-stone-900 px-10 py-16"
+              className="absolute inset-0 grid grid-cols-1 bg-stone-900 md:grid-cols-2"
             >
               <button
                 type="button"
@@ -314,16 +314,27 @@ export function Gallery({
                 إغلاق ✕
               </button>
 
-              {slide.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={slide.id}
-                  src={slide.image}
-                  alt={slide.title}
-                  className="max-h-[38vh] w-full rounded-sm border border-ink-gold/25 object-cover"
-                />
-              )}
+              {/* Picture fills the far column; the text keeps its own half. */}
+              <div className="relative order-1 min-h-[34vh] bg-stone-950 md:order-2 md:min-h-0">
+                {slide.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={slide.id}
+                    src={slide.image}
+                    alt={slide.title}
+                    className="absolute inset-0 h-full w-full object-contain p-4 md:p-8"
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 flex items-center justify-center font-display text-[6rem] text-ink-ivory/10"
+                  >
+                    {slide.title.slice(0, 1)}
+                  </span>
+                )}
+              </div>
 
+              <div className="order-2 flex flex-col justify-center gap-5 overflow-y-auto px-8 py-14 md:order-1 md:px-14">
               <span className="font-ui text-xs tracking-wide text-ink-gold">
                 {activeWork.category} · {activeWork.year}
               </span>
@@ -369,6 +380,7 @@ export function Gallery({
               >
                 {copy.detailCta}
               </a>
+              </div>
             </motion.div>
           </motion.div>
         )}

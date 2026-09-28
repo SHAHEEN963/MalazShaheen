@@ -146,6 +146,11 @@ b {
 /* ── Buttons ── */
 .btn {
   position: relative;
+  /* Creates a stacking context so the ::after fill stays inside the button.
+     Without it, z-index:-1 put the gold sweep behind the section background:
+     the fill never appeared, but the label still turned dark, leaving dark
+     text on a dark panel. */
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
