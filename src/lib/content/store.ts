@@ -3,7 +3,21 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { get, put } from "@vercel/blob";
 import { defaultContent } from "./defaults";
+import contentSeed from "../../../data/content.json";
 import type { SiteContent } from "./types";
+
+/**
+ * The repository's own data/content.json, bundled at build time.
+ *
+ * A Blob store starts empty, so pointing the project at a new one would
+ * otherwise drop the site back to the shipped defaults. This seed is layered
+ * over those defaults whenever the store has nothing yet; the moment the
+ * dashboard saves, the store takes over.
+ */
+const seedContent: SiteContent = mergeWithDefaults(
+  defaultContent,
+  contentSeed as unknown
+);
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
@@ -97,14 +111,14 @@ export async function getContent(): Promise<SiteContent> {
       });
 
       if (!result || result.statusCode !== 200) {
-        return normalise(defaultContent);
+        return normalise(seedContent);
       }
 
       const raw = await new Response(result.stream).text();
 
       return normalise(mergeWithDefaults(defaultContent, JSON.parse(raw)));
     } catch {
-      return normalise(defaultContent);
+      return normalise(seedContent);
     }
   }
 
@@ -112,7 +126,7 @@ export async function getContent(): Promise<SiteContent> {
     const raw = await fs.readFile(CONTENT_FILE, "utf8");
     return normalise(mergeWithDefaults(defaultContent, JSON.parse(raw)));
   } catch {
-    return normalise(defaultContent);
+    return normalise(seedContent);
   }
 }
 
