@@ -70,6 +70,8 @@ export type Artist = {
   logoHeader: string;
   /** Large wordmark in the hero. "" falls back to the name as text. */
   logoHero: string;
+  /** Uploaded CV. "" hides the download button. */
+  cv: string;
 };
 
 export type Contact = {

@@ -515,6 +515,14 @@ function HeaderTab({
           onChange={(logoHero) => patch({ artist: { ...artist, logoHero } })}
           hint="يتبع عرضه حجم الشاشة. اتركه فارغًا ليظهر الاسم كنص."
         />
+        <ImagePicker
+          label="السيرة الذاتية (PDF)"
+          value={artist.cv}
+          onChange={(cv) => patch({ artist: { ...artist, cv } })}
+          accept="application/pdf"
+          kind="file"
+          hint="ارفع ملفًا جديدًا في أي وقت ليحل محل القديم. إن تُرك فارغًا يعود زر الواجهة إلى فتح المعرض."
+        />
       </div>
 
       <div className="flex flex-col gap-3">

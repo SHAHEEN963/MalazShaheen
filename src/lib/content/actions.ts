@@ -20,6 +20,7 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/avif": ".avif",
   "image/gif": ".gif",
   "image/svg+xml": ".svg",
+  "application/pdf": ".pdf",
 };
 
 /** Persists the whole document and refreshes the public page. */
@@ -63,7 +64,7 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
 
   const extension = ALLOWED_TYPES[file.type];
   if (!extension) {
-    return { ok: false, message: "صيغة غير مدعومة. استخدم JPG أو PNG أو WEBP أو AVIF." };
+    return { ok: false, message: "صيغة غير مدعومة. استخدم صورة أو ملف PDF." };
   }
 
   // Generated name: never trust the client-supplied filename for a path.

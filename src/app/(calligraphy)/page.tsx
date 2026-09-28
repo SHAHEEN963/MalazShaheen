@@ -44,7 +44,11 @@ export default async function Home() {
       <Nav artist={artist} copy={headerCopy} />
       <JourneyRail />
 
-      <main className="relative z-10">
+      <main
+        className="relative z-10"
+        data-reviews={testimonials.length}
+        data-reviews-with-image={testimonials.filter((t) => t.image).length}
+      >
         <Hero artist={artist} copy={sections.hero} />
         <Studio artist={artist} stats={stats} copy={sections.studio} />
         <Gallery works={works} copy={sections.gallery} />

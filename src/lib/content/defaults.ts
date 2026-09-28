@@ -25,6 +25,7 @@ export const defaultContent: SiteContent = {
     portrait: "",
     logoHeader: "/brand/header-logo.svg",
     logoHero: "/brand/hero-logo.svg",
+    cv: "",
   },
 
   stats: [
@@ -211,7 +212,7 @@ export const defaultContent: SiteContent = {
       ],
     },
     hero: {
-      ctaPrimary: "ادخل المعرض",
+      ctaPrimary: "حمّل السيرة الذاتية",
       ctaSecondary: "احجز مشروعًا",
       scrollHint: "٨ غرف",
     },

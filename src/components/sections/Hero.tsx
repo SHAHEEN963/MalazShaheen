@@ -111,7 +111,13 @@ export function Hero({
           transition={{ duration: 1, delay: 1.8 }}
           className="mt-12 flex flex-col gap-4 sm:flex-row"
         >
-          <a href="#works" className="btn btn-solid">
+          {/* Goes through /api/cv so the PDF downloads instead of opening:
+              a cross-origin `download` attribute is ignored by browsers. */}
+          <a
+            href={artist.cv ? "/api/cv" : "#works"}
+            {...(artist.cv ? { download: "" } : {})}
+            className="btn btn-solid"
+          >
             {copy.ctaPrimary}
           </a>
           <a href="#contact" className="btn btn-ghost">

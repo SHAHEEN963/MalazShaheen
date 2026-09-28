@@ -291,11 +291,17 @@ export function ImagePicker({
   value,
   onChange,
   hint,
+  accept = "image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml",
+  kind = "image",
 }: {
   label: string;
   value: string;
   onChange: (path: string) => void;
   hint?: string;
+  /** Overrides the file types the picker offers. */
+  accept?: string;
+  /** "file" swaps the thumbnail for a plain filename, for PDFs and the like. */
+  kind?: "image" | "file";
 }) {
   const id = useId();
   const directUpload = useContext(DirectUploadContext);
@@ -342,14 +348,18 @@ export function ImagePicker({
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-white/15 bg-stone-950">
-          {value ? (
+          {value && kind === "image" ? (
             // Plain <img>: these are user uploads of unknown dimensions and the
             // dashboard is not performance-critical.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" className="h-full w-full object-cover" />
+          ) : value ? (
+            <span className="px-2 text-center text-xs break-all text-ink-gold">
+              PDF ✓
+            </span>
           ) : (
             <span className="px-2 text-center text-xs text-ink-sand/60">
-              لا صورة
+              {kind === "image" ? "لا صورة" : "لا ملف"}
             </span>
           )}
         </div>
@@ -358,7 +368,7 @@ export function ImagePicker({
           <input
             id={id}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml"
+            accept={accept}
             className="text-xs text-ink-sand file:me-3 file:rounded file:border-0 file:bg-stone-700 file:px-3 file:py-1.5 file:text-ink-ivory"
             onChange={(e) => handleFile(e.target.files?.[0])}
             disabled={pending}
@@ -369,7 +379,7 @@ export function ImagePicker({
               onClick={() => onChange("")}
               className="dash-btn dash-btn-danger dash-btn-sm self-start"
             >
-              إزالة الصورة
+              {kind === "image" ? "إزالة الصورة" : "إزالة الملف"}
             </button>
           )}
           {pending && <p className="text-xs text-ink-gold">جارٍ الرفع…</p>}
