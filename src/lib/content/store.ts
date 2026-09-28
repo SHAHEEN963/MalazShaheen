@@ -111,13 +111,25 @@ export async function getContent(): Promise<SiteContent> {
       });
 
       if (!result || result.statusCode !== 200) {
+        // Loud on purpose: falling back here serves older content, and doing
+        // that silently made a saved review look like it had vanished.
+        console.error(
+          "[content] blob read did not return 200:",
+          result ? result.statusCode : "null result",
+          "— serving the bundled seed instead"
+        );
         return normalise(seedContent);
       }
 
       const raw = await new Response(result.stream).text();
 
       return normalise(mergeWithDefaults(defaultContent, JSON.parse(raw)));
-    } catch {
+    } catch (error) {
+      console.error(
+        "[content] blob read failed:",
+        error instanceof Error ? error.message : error,
+        "— serving the bundled seed instead"
+      );
       return normalise(seedContent);
     }
   }
