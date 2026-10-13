@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
+import { KeyedVideo } from "../KeyedVideo";
 
 /**
  * Room 01 — الاسم.
@@ -47,8 +48,18 @@ export function Hero({
     <section
       ref={sectionRef}
       id="hero"
-      className="relative flex min-h-[100svh] items-center justify-center px-6"
-      style={{ perspective: "1400px" }}
+      className="relative flex min-h-[100svh] flex-col items-center justify-start px-6 pb-24"
+      style={
+        {
+          perspective: "1400px",
+          // 68px is the fixed header. --g sits above and below the eyebrow, so
+          // it lands midway between header and video; --t does the same for
+          // the tagline between video and buttons.
+          "--g": "clamp(36px, 6.5vh, 72px)",
+          "--t": "clamp(28px, 5vh, 56px)",
+          paddingTop: "calc(68px + var(--g))",
+        } as React.CSSProperties
+      }
     >
       <motion.div
         style={{ z: depth, opacity: fade, filter: blur }}
@@ -58,7 +69,7 @@ export function Hero({
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3 }}
-          className="mb-8 flex items-center gap-4"
+          className="mb-[var(--g)] flex items-center gap-4"
         >
           <span className="h-px w-10 bg-ink-gold/50" />
           <span className="font-ui text-sm text-ink-gold">{artist.title}</span>
@@ -80,29 +91,17 @@ export function Hero({
             transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
             /* leading + padding give the ن of شاهين room for its bowl below
                the baseline; a tight line-height was cropping it. */
-            className="font-display text-gold-foil pb-[0.22em] text-[clamp(3.4rem,14vw,11rem)] leading-[1.24] drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
+            className={
+              artist.heroVideo
+                ? "block leading-none"
+                : "font-display text-gold-foil pb-[0.22em] text-[clamp(3.4rem,14vw,11rem)] leading-[1.24] drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
+            }
           >
             {artist.heroVideo ? (
               <>
-                {/* Muted + playsInline is what lets mobile browsers autoplay. */}
-                <video
+                <KeyedVideo
                   src={artist.heroVideo}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="auto"
-                  aria-hidden="true"
                   className="mx-auto block w-[clamp(260px,54vw,820px)] h-auto"
-                  // The clip has its own dark backdrop, a shade off the page's;
-                  // feathering the edges dissolves that rectangle so only the
-                  // calligraphy reads.
-                  style={{
-                    maskImage:
-                      "radial-gradient(ellipse closest-side at center, #000 68%, transparent 100%)",
-                    WebkitMaskImage:
-                      "radial-gradient(ellipse closest-side at center, #000 68%, transparent 100%)",
-                  }}
                 />
                 <span className="sr-only">{artist.name}</span>
               </>
@@ -124,7 +123,7 @@ export function Hero({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1.5 }}
-          className="mt-6 max-w-lg font-editorial text-lg leading-relaxed text-ink-sand"
+          className="mt-[var(--t)] max-w-lg font-editorial text-lg leading-relaxed text-ink-sand"
         >
           {artist.tagline}
         </motion.p>
@@ -133,7 +132,7 @@ export function Hero({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1.8 }}
-          className="mt-12 flex flex-col gap-4 sm:flex-row"
+          className="mt-[var(--t)] flex flex-col gap-4 sm:flex-row"
         >
           <a href="#works" className="btn btn-solid">
             {copy.ctaPrimary}
@@ -150,11 +149,6 @@ export function Hero({
         transition={{ delay: 2.4, duration: 1 }}
         className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3"
       >
-        {copy.scrollHint && (
-          <span className="font-ui text-[0.7rem] tracking-widest text-ink-sand/60">
-            {copy.scrollHint}
-          </span>
-        )}
         <span className="block h-14 w-px bg-[linear-gradient(to_bottom,var(--color-ink-gold),transparent)]" />
       </motion.div>
     </section>

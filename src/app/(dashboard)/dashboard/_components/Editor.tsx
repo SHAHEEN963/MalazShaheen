@@ -715,11 +715,6 @@ function SectionsTab({
             onChange={(ctaSecondary) => set({ hero: { ...s.hero, ctaSecondary } })}
           />
         </div>
-        <Field
-          label="تلميح التمرير"
-          value={s.hero.scrollHint}
-          onChange={(scrollHint) => set({ hero: { ...s.hero, scrollHint } })}
-        />
       </div>
 
       <div className="dash-card flex flex-col gap-4">

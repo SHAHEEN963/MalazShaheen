@@ -248,9 +248,9 @@
       ]
     },
     "hero": {
-      "ctaPrimary": "ادخل المعرض",
+      "ctaPrimary": "تصفح معرض الأعمال",
       "ctaSecondary": "احجز مشروعًا",
-      "scrollHint": "٨ غرف"
+      "scrollHint": ""
     },
     "studio": {
       "label": "نبذة",
