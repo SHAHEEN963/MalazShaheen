@@ -23,6 +23,8 @@ const ALLOWED_CONTENT_TYPES = [
   "image/gif",
   "image/svg+xml",
   "application/pdf",
+  "video/mp4",
+  "video/webm",
 ];
 
 export async function POST(request: Request): Promise<Response> {

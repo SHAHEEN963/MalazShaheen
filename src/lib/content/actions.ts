@@ -21,6 +21,8 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/gif": ".gif",
   "image/svg+xml": ".svg",
   "application/pdf": ".pdf",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
 };
 
 /** Persists the whole document and refreshes the public page. */

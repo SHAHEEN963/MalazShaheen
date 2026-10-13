@@ -42,7 +42,7 @@ export default async function Home() {
       <div className="paper-grain" aria-hidden="true" />
       <InkTrail />
       <Nav artist={artist} copy={headerCopy} />
-      <JourneyRail />
+      <JourneyRail items={sections.rail.items} />
 
       <main
         className="relative z-10"

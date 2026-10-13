@@ -26,6 +26,7 @@ export const defaultContent: SiteContent = {
     logoHeader: "/brand/header-logo.svg",
     logoHero: "/brand/hero-logo.svg",
     cv: "",
+    heroVideo: "/brand/hero.mp4",
   },
 
   stats: [
@@ -211,8 +212,20 @@ export const defaultContent: SiteContent = {
         { id: "contact", label: "التواصل", href: "#contact" },
       ],
     },
+    rail: {
+      items: [
+        { id: "hero", label: "الاسم", index: "٠١" },
+        { id: "about", label: "المرسم", index: "٠٢" },
+        { id: "works", label: "المعرض", index: "٠٣" },
+        { id: "services", label: "الخدمات", index: "٠٤" },
+        { id: "process", label: "الرحلة", index: "٠٥" },
+        { id: "voices", label: "الأصوات", index: "٠٦" },
+        { id: "showcase", label: "الحبر", index: "٠٧" },
+        { id: "contact", label: "التوقيع", index: "٠٨" },
+      ],
+    },
     hero: {
-      ctaPrimary: "حمّل السيرة الذاتية",
+      ctaPrimary: "تصفح معرض الأعمال",
       ctaSecondary: "احجز مشروعًا",
       scrollHint: "",
     },

@@ -7,8 +7,8 @@ import { RoomTag } from "../RoomTag";
 /**
  * Room 06 — الأصوات.
  * Reviews are published as pictures (screenshots of what clients sent), shown
- * one at a time in a wide 16:9 frame. Arrows and keyboard both drive it; there
- * is no timer, so nobody waits for a slide to come back around.
+ * one at a time in a 16:9 frame with the arrows either side of it. Arrows and
+ * keyboard both drive it; there is no timer.
  */
 export function Voices({
   testimonials,
@@ -42,6 +42,8 @@ export function Voices({
   if (slides.length === 0) return null;
 
   const current = slides[Math.min(index, slides.length - 1)];
+  const arrow =
+    "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900";
 
   return (
     <section
@@ -49,55 +51,41 @@ export function Voices({
       className="relative z-10 overflow-hidden bg-stone-700/95 py-28 sm:py-36"
     >
       <div className="mx-auto max-w-6xl px-6">
-        <div className="flex flex-wrap items-end justify-between gap-8">
-          <div>
-            <RoomTag index="٠٦" label={copy.label} />
-            <h2 className="mt-6 max-w-2xl font-display text-[clamp(1.9rem,5vw,3.2rem)] leading-tight text-ink-ivory">
-              {copy.heading}
-            </h2>
+        <RoomTag index="٠٦" label={copy.label} />
+        <h2 className="mt-6 max-w-2xl font-display text-[clamp(1.9rem,5vw,3.2rem)] leading-tight text-ink-ivory">
+          {copy.heading}
+        </h2>
+
+        <div className="mx-auto mt-12 flex max-w-4xl items-center gap-3 sm:gap-6">
+          {slides.length > 1 && (
+            <button type="button" onClick={() => go(-1)} aria-label="السابق" className={arrow}>
+              →
+            </button>
+          )}
+
+          {/* Same 16:9 window for every review, framed in a fine gold line */}
+          <div
+            className="relative aspect-[16/9] min-w-0 flex-1 overflow-hidden rounded-sm border border-ink-gold/70 bg-stone-950 p-1 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]"
+            aria-live="polite"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              key={current.id}
+              src={current.image}
+              alt={current.caption || "تقييم عميل"}
+              className="h-full w-full object-contain"
+            />
           </div>
 
           {slides.length > 1 && (
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => go(-1)}
-                aria-label="السابق"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
-              >
-                →
-              </button>
-              <span className="font-ui text-sm tabular-nums text-ink-sand">
-                {index + 1} / {slides.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => go(1)}
-                aria-label="التالي"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
-              >
-                ←
-              </button>
-            </div>
+            <button type="button" onClick={() => go(1)} aria-label="التالي" className={arrow}>
+              ←
+            </button>
           )}
         </div>
 
-        {/* Wide frame — every review sits in the same 16:9 window */}
-        <div
-          className="relative mt-12 aspect-[16/9] w-full overflow-hidden rounded-sm border border-ink-gold/30 bg-stone-950 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]"
-          aria-live="polite"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            key={current.id}
-            src={current.image}
-            alt={current.caption || "تقييم عميل"}
-            className="h-full w-full object-contain"
-          />
-        </div>
-
         {slides.length > 1 && (
-          <div className="mt-6 flex justify-center gap-2">
+          <div className="mt-6 flex items-center justify-center gap-2">
             {slides.map((slide, i) => (
               <button
                 key={slide.id}
@@ -105,8 +93,8 @@ export function Voices({
                 onClick={() => setIndex(i)}
                 aria-label={`التقييم ${i + 1}`}
                 aria-current={i === index}
-                className={`h-1.5 w-8 rounded-full transition-colors ${
-                  i === index ? "bg-ink-gold" : "bg-ink-ivory/25 hover:bg-ink-gold/60"
+                className={`h-1.5 rounded-full transition-all ${
+                  i === index ? "w-8 bg-ink-gold" : "w-1.5 bg-ink-ivory/30 hover:bg-ink-gold/60"
                 }`}
               />
             ))}

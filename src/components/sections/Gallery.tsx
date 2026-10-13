@@ -9,8 +9,10 @@ import { RoomTag } from "../RoomTag";
 
 /**
  * Room 03 — المعرض.
- * The works hang on a rotating cylinder in real perspective space. Drag it,
- * wheel it, or arrow through it; the piece facing you lifts toward the light.
+ * A cover-flow carousel: the current work stands at the centre, its
+ * neighbours recede to either side, angled toward it. Cards are 4:5 (the
+ * 1080×1350 portrait format), and the pointer tilts a card in 3D on hover.
+ * Opening a work keeps the existing detail view.
  */
 export function Gallery({
   works,
@@ -21,31 +23,20 @@ export function Gallery({
 }) {
   const isSmall = useIsCoarseOrSmall();
   const reducedMotion = useReducedMotion();
-  const radius = isSmall ? 260 : 430;
-  // Derived from the live list, so adding or removing a work re-spaces the drum.
-  const STEP = works.length > 0 ? 360 / works.length : 360;
+  const canTilt = !isSmall && !reducedMotion;
+  const count = works.length;
 
-  const [rotation, setRotation] = useState(0);
-  const [dragging, setDragging] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [openId, setOpenId] = useState<string | null>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ startX: 0, startRotation: 0 });
-  const idleRef = useRef(true);
+  const dragStart = useRef<number | null>(null);
 
-  const activeIndex =
-    ((Math.round(-rotation / STEP) % works.length) + works.length) % works.length;
   const activeWork = works.find((w) => w.id === openId) ?? null;
   const [slideIndex, setSlideIndex] = useState(0);
 
   /**
-   * The pieces shown inside one work. A work with no extra items still gets a
-   * single slide built from its own cover, title and description, so older
-   * content keeps working unchanged.
-   */
-  /**
-   * The work's own cover — the picture shown on the cylinder — leads, then the
-   * pieces added to it. A work with no pieces is simply a single slide.
-   * (`items` is guarded: content saved before that field existed lacks it.)
+   * The work's own cover leads, then the pieces added to it. A work with no
+   * pieces is simply a single slide. (`items` is guarded: content saved before
+   * that field existed lacks it.)
    */
   const slides = activeWork
     ? [
@@ -77,21 +68,13 @@ export function Gallery({
     setSlideIndex(0);
   }, []);
 
-  // Slow drift while nobody is touching it — the cylinder feels alive.
-  useEffect(() => {
-    if (reducedMotion || openId) return;
-    let raf = 0;
-    let last = performance.now();
-    const loop = (now: number) => {
-      const dt = now - last;
-      last = now;
-      // Much gentler drift so the wall reads as still, not spinning.
-      if (idleRef.current) setRotation((r) => r - dt * 0.0007);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [reducedMotion, openId]);
+  const step = useCallback(
+    (direction: 1 | -1) => {
+      if (count === 0) return;
+      setActiveIndex((i) => (i + direction + count) % count);
+    },
+    [count]
+  );
 
   useEffect(() => {
     if (!openId) return;
@@ -121,41 +104,36 @@ export function Gallery({
     };
   }, [openId, stepSlide]);
 
-  function snap(to: number) {
-    idleRef.current = false;
-    setRotation(to);
+  /** Shortest signed distance from the active card, so the ring wraps. */
+  function offsetOf(i: number) {
+    let d = i - activeIndex;
+    if (d > count / 2) d -= count;
+    if (d < -count / 2) d += count;
+    return d;
   }
 
-  function onPointerDown(event: React.PointerEvent) {
-    idleRef.current = false;
-    setDragging(true);
-    dragState.current = { startX: event.clientX, startRotation: rotation };
-    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+  /** Tilts the hovered card toward the pointer. Written straight to the
+   *  element so moving the mouse never re-renders the carousel. */
+  function tilt(event: React.MouseEvent<HTMLElement>) {
+    if (!canTilt) return;
+    const el = event.currentTarget;
+    const r = el.getBoundingClientRect();
+    const px = (event.clientX - r.left) / r.width - 0.5;
+    const py = (event.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `rotateY(${px * 18}deg) rotateX(${-py * 12}deg) translateZ(24px)`;
   }
 
-  function onPointerMove(event: React.PointerEvent) {
-    if (!dragging) return;
-    const dx = event.clientX - dragState.current.startX;
-    setRotation(dragState.current.startRotation - dx * 0.22);
+  function untilt(event: React.MouseEvent<HTMLElement>) {
+    event.currentTarget.style.transform = "";
   }
 
-  function onPointerUp() {
-    if (!dragging) return;
-    setDragging(false);
-    setRotation((r) => Math.round(r / STEP) * STEP);
-  }
+  const spacing = isSmall ? 150 : 260;
 
   return (
     <section
       id="works"
       className="relative z-10 overflow-hidden bg-[linear-gradient(180deg,rgba(42,42,39,0.94),rgba(35,35,33,0.88)_45%,rgba(42,42,39,0.94))] py-28 sm:py-36"
     >
-      {/* stage spotlight */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-1/3 h-[520px] bg-[radial-gradient(ellipse_at_center,rgba(201,162,75,0.14),transparent_65%)]"
-      />
-
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
@@ -164,134 +142,139 @@ export function Gallery({
               {copy.heading}
             </h2>
           </div>
+          <span className="font-ui text-sm tabular-nums text-ink-sand">
+            {count > 0 ? activeIndex + 1 : 0} / {count}
+          </span>
+        </div>
+      </div>
 
-          <div className="flex items-center gap-3">
+      {/* The carousel */}
+      <div
+        className="relative mt-14 h-[400px] touch-pan-y select-none sm:h-[520px]"
+        style={{ perspective: "1600px" }}
+        onPointerDown={(e) => (dragStart.current = e.clientX)}
+        onPointerUp={(e) => {
+          if (dragStart.current === null) return;
+          const dx = e.clientX - dragStart.current;
+          dragStart.current = null;
+          // RTL: dragging toward the left brings the next work in.
+          if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+        }}
+      >
+        {works.map((work, i) => {
+          const d = offsetOf(i);
+          const abs = Math.abs(d);
+          const visible = abs <= 2;
+          const isActive = d === 0;
+          return (
+            <button
+              key={work.id}
+              type="button"
+              onClick={() => (isActive ? openWork(work.id) : setActiveIndex(i))}
+              aria-label={`${work.title} — ${work.category}`}
+              aria-current={isActive}
+              tabIndex={visible ? 0 : -1}
+              className="absolute left-1/2 top-1/2 block aspect-[4/5] w-[240px] sm:w-[340px]"
+              style={{
+                // Positive offsets sit to the left: the reading direction is RTL.
+                transform: `translate(-50%,-50%) translateX(${-d * spacing}px) scale(${
+                  1 - abs * 0.14
+                }) rotateY(${d * 14}deg)`,
+                zIndex: 10 - abs,
+                opacity: visible ? 1 - abs * 0.28 : 0,
+                pointerEvents: visible ? "auto" : "none",
+                transition:
+                  "transform 0.7s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease",
+                transformStyle: "preserve-3d",
+              }}
+            >
+              <span
+                onMouseMove={tilt}
+                onMouseLeave={untilt}
+                className={`relative flex h-full w-full flex-col justify-between overflow-hidden rounded-sm border text-start shadow-[0_40px_80px_-30px_rgba(0,0,0,0.9)] transition-transform duration-300 ease-out ${
+                  isActive ? "border-ink-gold/60" : "border-ink-gold/15"
+                } bg-stone-900`}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                {work.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={work.image}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 flex items-center justify-center font-display text-[6rem] text-ink-ivory/[0.07]"
+                  >
+                    {work.title.slice(0, 1)}
+                  </span>
+                )}
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[linear-gradient(to_top,rgba(20,20,18,0.92),rgba(20,20,18,0.15)_55%,transparent)]"
+                />
+                {!isActive && (
+                  <span aria-hidden="true" className="absolute inset-0 bg-stone-950/35" />
+                )}
+
+                <span className="relative m-4 self-end rounded-sm border border-ink-ivory/30 px-2 py-1 font-ui text-[0.68rem] text-ink-ivory/85">
+                  {work.category}
+                </span>
+                <span className="relative p-5 sm:p-6">
+                  <span className="block font-display text-2xl leading-tight text-ink-ivory sm:text-3xl">
+                    {work.title}
+                  </span>
+                  <span className="mt-3 block h-px w-12 bg-ink-gold" />
+                  <span className="mt-3 block font-ui text-xs text-ink-sand">
+                    {isActive ? copy.cardHint : work.year}
+                  </span>
+                </span>
+              </span>
+            </button>
+          );
+        })}
+
+        {count > 1 && (
+          <>
             <button
               type="button"
-              onClick={() => snap(rotation + STEP)}
+              onClick={() => step(-1)}
               aria-label="العمل السابق"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-gold/40 text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
+              className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-gold/40 bg-stone-950/60 text-ink-gold backdrop-blur transition-colors hover:bg-ink-gold hover:text-stone-900 sm:right-8"
             >
               →
             </button>
-            <span className="font-ui text-sm tabular-nums text-ink-sand">
-              {activeIndex + 1} / {works.length}
-            </span>
             <button
               type="button"
-              onClick={() => snap(rotation - STEP)}
+              onClick={() => step(1)}
               aria-label="العمل التالي"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-gold/40 text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900"
+              className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-gold/40 bg-stone-950/60 text-ink-gold backdrop-blur transition-colors hover:bg-ink-gold hover:text-stone-900 sm:left-8"
             >
               ←
             </button>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
-      {/* The cylinder */}
-      <div
-        className="relative mt-16 h-[440px] touch-pan-y select-none sm:h-[520px]"
-        // Long perspective: cards keep almost the same size all the way round.
-        style={{ perspective: "3200px" }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onMouseEnter={() => (idleRef.current = false)}
-        onMouseLeave={() => {
-          idleRef.current = true;
-          onPointerUp();
-        }}
-      >
-        <div
-          ref={stageRef}
-          className="absolute left-1/2 top-1/2 h-0 w-0"
-          style={{
-            transformStyle: "preserve-3d",
-            transform: `translate(-50%,-50%) rotateY(${rotation}deg)`,
-            transition: dragging ? "none" : "transform 0.9s cubic-bezier(0.22,1,0.36,1)",
-          }}
-        >
-          {works.map((work, i) => {
-            const cardAngle = i * STEP;
-            const relative = ((cardAngle + rotation) % 360 + 360) % 360;
-            const facing = Math.cos((relative * Math.PI) / 180);
-            const isActive = i === activeIndex;
-            return (
-              <button
-                key={work.id}
-                type="button"
-                onClick={() => (isActive ? openWork(work.id) : snap(-cardAngle))}
-                aria-label={`${work.title} — ${work.category}`}
-                className="absolute start-1/2 top-1/2 block h-[300px] w-[210px] sm:h-[360px] sm:w-[250px]"
-                style={{
-                  transform: `translate(-50%,-50%) rotateY(${cardAngle}deg) translateZ(${radius}px)`,
-                  // Depth is signalled by light alone — no lift, blur or resize.
-                  opacity: 0.32 + Math.max(0, facing) * 0.68,
-                  pointerEvents: facing > 0.2 ? "auto" : "none",
-                  transition: "opacity 0.6s ease",
-                }}
-              >
-                <span
-                  className={`relative flex h-full w-full flex-col justify-between overflow-hidden border p-5 text-start transition-colors duration-500 ${
-                    isActive
-                      ? "border-ink-gold/70 bg-stone-950 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.9)]"
-                      : "border-ink-gold/20 bg-stone-900"
-                  }`}
-                >
-                  <span className="font-ui text-[0.7rem] tracking-wide text-ink-gold">
-                    {work.category}
-                  </span>
-                  {work.image ? (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={work.image}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-0 h-full w-full object-cover opacity-70"
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(28,28,26,0.92),rgba(28,28,26,0.25))]"
-                      />
-                    </>
-                  ) : (
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-0 flex items-center justify-center font-display text-[5rem] text-ink-ivory/[0.06]"
-                    >
-                      {work.title.slice(0, 1)}
-                    </span>
-                  )}
-                  <span className="relative">
-                    <span className="block font-display text-2xl leading-tight text-ink-ivory">
-                      {work.title}
-                    </span>
-                    <span className="mt-2 block font-ui text-xs text-ink-sand/70">
-                      {work.year}
-                    </span>
-                    {isActive && (
-                      <span className="mt-3 block font-ui text-xs text-ink-gold">
-                        {copy.cardHint}
-                      </span>
-                    )}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
+      {count > 1 && (
+        <div className="mt-8 flex justify-center gap-2">
+          {works.map((work, i) => (
+            <button
+              key={work.id}
+              type="button"
+              onClick={() => setActiveIndex(i)}
+              aria-label={`العمل ${i + 1}`}
+              aria-current={i === activeIndex}
+              className={`h-1.5 rounded-full transition-all ${
+                i === activeIndex ? "w-8 bg-ink-gold" : "w-1.5 bg-ink-ivory/30"
+              }`}
+            />
+          ))}
         </div>
-
-        {/* floor shadow */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-6 left-1/2 h-16 w-[70%] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.55),transparent_70%)]"
-        />
-      </div>
-
-      {/* Detail takeover — slides in from the reading edge */}
+      )}
       {/* Rendered into <body>: <main> carries z-10, which boxes every z-index
           inside it, so the nav (z-60) and the room rail (z-55) painted over
           this dialog no matter how high its own z-index went. */}

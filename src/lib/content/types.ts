@@ -72,6 +72,8 @@ export type Artist = {
   logoHero: string;
   /** Uploaded CV. "" hides the download button. */
   cv: string;
+  /** Looping video shown in place of the hero wordmark. "" uses the wordmark. */
+  heroVideo: string;
 };
 
 export type Contact = {
@@ -94,9 +96,18 @@ export type NavLink = {
   href: string;
 };
 
+export type RailItem = {
+  /** Section the entry scrolls to, without the leading #. */
+  id: string;
+  label: string;
+  index: string;
+};
+
 export type Sections = {
   /** The top bar: its navigation entries. */
   header: { links: NavLink[] };
+  /** The room index down the side of the page. */
+  rail: { items: RailItem[] };
   hero: { ctaPrimary: string; ctaSecondary: string; scrollHint: string };
   studio: SectionCopy;
   gallery: SectionCopy & { cardHint: string; detailCta: string };

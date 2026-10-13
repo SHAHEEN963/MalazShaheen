@@ -516,6 +516,14 @@ function HeaderTab({
           hint="يتبع عرضه حجم الشاشة. اتركه فارغًا ليظهر الاسم كنص."
         />
         <ImagePicker
+          label="فيديو الواجهة (MP4)"
+          value={artist.heroVideo}
+          onChange={(heroVideo) => patch({ artist: { ...artist, heroVideo } })}
+          accept="video/mp4,video/webm"
+          kind="file"
+          hint="يظهر مكان الاسم في الواجهة ويعمل تلقائيًا بلا صوت. اتركه فارغًا ليظهر الشعار بدله."
+        />
+        <ImagePicker
           label="السيرة الذاتية (PDF)"
           value={artist.cv}
           onChange={(cv) => patch({ artist: { ...artist, cv } })}
@@ -561,6 +569,44 @@ function HeaderTab({
             </div>
           )}
         />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <SectionIntro
+          title="الشريط الجانبي"
+          description="فهرس الأقسام على جانب الصفحة: الرقم والاسم ووجهة كل عنصر، وبالترتيب الظاهر هنا."
+        />
+        <ListEditor
+          items={sections.rail.items}
+          onChange={(updater) =>
+            patchWith((c) => ({
+              ...c,
+              sections: {
+                ...c.sections,
+                rail: { ...c.sections.rail, items: updater(c.sections.rail.items) },
+              },
+            }))
+          }
+          addLabel="أضف عنصرًا"
+          makeNew={() => ({ id: "", label: "", index: "" })}
+          summary={(r) => `${r.index} ${r.label}`}
+          renderItem={(room, update) => (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="الرقم" value={room.index} onChange={(index) => update({ index })} />
+              <Field label="الاسم" value={room.label} onChange={(label) => update({ label })} />
+              <Field
+                label="القسم (معرّفه)"
+                value={room.id}
+                onChange={(id) => update({ id: id.replace(/^#/, "") })}
+                dir="ltr"
+                placeholder="works"
+              />
+            </div>
+          )}
+        />
+        <p className="text-xs leading-relaxed text-ink-sand/70">
+          المعرّفات المتاحة: hero · about · works · services · process · voices · showcase · contact
+        </p>
       </div>
     </section>
   );

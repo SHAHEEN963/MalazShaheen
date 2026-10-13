@@ -153,12 +153,13 @@ export function InkLab({
         </div>
 
         {/* Framed sheet */}
-        <div className="relative mt-12 border border-ink-gold/45 bg-stone-950 p-2 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]">
+        <div className="relative mx-6 mt-12 border border-ink-gold/45 sm:mx-0 bg-stone-950 p-2 shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)]">
           <div className="relative border border-ink-gold/20">
             <canvas
               ref={canvasRef}
-              // pan-y, not none: a touch visitor must still be able to swipe past this room
-              className="block h-[420px] w-full touch-pan-y sm:h-[520px]"
+              // touch-none: a finger on the sheet always writes, never scrolls. The
+              // gutters around the frame are where a touch visitor scrolls past.
+              className="block h-[420px] w-full touch-none sm:h-[520px]"
               role="img"
               aria-label="سطح كتابة: اضغط واسحب لترك أثر الحبر"
             />

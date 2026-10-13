@@ -82,7 +82,31 @@ export function Hero({
                the baseline; a tight line-height was cropping it. */
             className="font-display text-gold-foil pb-[0.22em] text-[clamp(3.4rem,14vw,11rem)] leading-[1.24] drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
           >
-            {artist.logoHero ? (
+            {artist.heroVideo ? (
+              <>
+                {/* Muted + playsInline is what lets mobile browsers autoplay. */}
+                <video
+                  src={artist.heroVideo}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  aria-hidden="true"
+                  className="mx-auto block w-[clamp(260px,54vw,820px)] h-auto"
+                  // The clip has its own dark backdrop, a shade off the page's;
+                  // feathering the edges dissolves that rectangle so only the
+                  // calligraphy reads.
+                  style={{
+                    maskImage:
+                      "radial-gradient(ellipse closest-side at center, #000 68%, transparent 100%)",
+                    WebkitMaskImage:
+                      "radial-gradient(ellipse closest-side at center, #000 68%, transparent 100%)",
+                  }}
+                />
+                <span className="sr-only">{artist.name}</span>
+              </>
+            ) : artist.logoHero ? (
               /* Width tracks the type it replaces: ~774px at a 1440 viewport. */
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -111,13 +135,7 @@ export function Hero({
           transition={{ duration: 1, delay: 1.8 }}
           className="mt-12 flex flex-col gap-4 sm:flex-row"
         >
-          {/* Goes through /api/cv so the PDF downloads instead of opening:
-              a cross-origin `download` attribute is ignored by browsers. */}
-          <a
-            href={artist.cv ? "/api/cv" : "#works"}
-            {...(artist.cv ? { download: "" } : {})}
-            className="btn btn-solid"
-          >
+          <a href="#works" className="btn btn-solid">
             {copy.ctaPrimary}
           </a>
           <a href="#contact" className="btn btn-ghost">

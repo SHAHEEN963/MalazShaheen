@@ -100,8 +100,9 @@ export function Signature({
               href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative font-ui text-sm font-bold text-ink-sand transition-colors hover:text-ink-gold"
+              className="group relative inline-flex items-center gap-2 font-ui text-sm font-bold text-ink-sand transition-colors hover:text-ink-gold"
             >
+              <SocialIcon href={s.href} />
               {s.label}
               <span className="absolute -bottom-1 start-0 h-px w-0 bg-ink-gold transition-all duration-500 group-hover:w-full" />
             </a>
@@ -120,6 +121,45 @@ export function Signature({
       </div>
     </section>
   );
+}
+
+/**
+ * Brand glyph for a social link, picked from its address so a renamed label
+ * ("لينكد إن", "LinkedIn") keeps the right icon. Unknown sites get none.
+ */
+function SocialIcon({ href }: { href: string }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    "aria-hidden": true,
+    className: "shrink-0",
+  } as const;
+
+  if (/instagram\.com/i.test(href)) {
+    return (
+      <svg {...common} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4.2" />
+        <circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+  if (/behance\.net/i.test(href)) {
+    return (
+      <svg {...common} fill="currentColor">
+        <path d="M8.2 11.3c.9-.4 1.4-1.1 1.4-2.2C9.6 7 8.1 6 6.1 6H1v12h5.3c2.1 0 4-1 4-3.4 0-1.5-.8-2.6-2.1-3.3ZM3.4 8h2.3c.9 0 1.6.3 1.6 1.2 0 .9-.6 1.3-1.5 1.3H3.4V8Zm2.6 8H3.4v-3.2h2.7c1.1 0 1.8.4 1.8 1.6 0 1.2-.8 1.6-1.9 1.6ZM16.9 9.1c-2.7 0-4.5 2-4.5 4.6 0 2.7 1.7 4.6 4.5 4.6 2.1 0 3.4-.9 4.1-2.9h-2.2c-.2.7-1.1 1.1-1.8 1.1-1.3 0-2-.8-2-2.1h6.1c.1-2.8-1.4-5.3-4.2-5.3Zm-1.9 3.8c.1-1.1.8-1.8 1.9-1.8 1.1 0 1.7.7 1.8 1.8H15ZM14.5 6.8h4.8v1.4h-4.8z" />
+      </svg>
+    );
+  }
+  if (/linkedin\.com/i.test(href)) {
+    return (
+      <svg {...common} fill="currentColor">
+        <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.75h4v11H3v-11Zm6.5 0h3.8v1.5h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1v5.45h-4v-4.83c0-1.15-.02-2.63-1.6-2.63-1.6 0-1.85 1.25-1.85 2.55v4.91h-4v-11Z" />
+      </svg>
+    );
+  }
+  return null;
 }
 
 /** Pulls its child gently toward the quill when the pointer comes near. */

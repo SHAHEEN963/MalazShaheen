@@ -1,21 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { RailItem } from "@/lib/content/types";
 import { useIsCoarseOrSmall } from "@/lib/useReducedMotion";
 
-const rooms = [
-  { id: "hero", label: "الاسم", index: "٠١" },
-  { id: "about", label: "المرسم", index: "٠٢" },
-  { id: "works", label: "المعرض", index: "٠٣" },
-  { id: "services", label: "الخدمات", index: "٠٤" },
-  { id: "process", label: "الرحلة", index: "٠٥" },
-  { id: "voices", label: "الأصوات", index: "٠٦" },
-  { id: "showcase", label: "الحبر", index: "٠٧" },
-  { id: "contact", label: "التوقيع", index: "٠٨" },
-];
-
 /** A room index down the edge of the studio: which room you are standing in. */
-export function JourneyRail() {
+export function JourneyRail({ items: rooms }: { items: RailItem[] }) {
   const isSmall = useIsCoarseOrSmall();
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -50,7 +40,7 @@ export function JourneyRail() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [isSmall]);
+  }, [isSmall, rooms]);
 
   if (isSmall) return null;
 
