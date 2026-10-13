@@ -142,15 +142,6 @@ export function Hero({
           </a>
         </motion.div>
       </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.4, duration: 1 }}
-        className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3"
-      >
-        <span className="block h-14 w-px bg-[linear-gradient(to_bottom,var(--color-ink-gold),transparent)]" />
-      </motion.div>
     </section>
   );
 }
