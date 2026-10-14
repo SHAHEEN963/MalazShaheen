@@ -45,9 +45,9 @@ export function Voices({
   // Desktop: outlined arrows either side of the frame.
   const arrow =
     "hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900 sm:flex";
-  // Phone: solid gold arrows inside the picture, so it can take the full width.
-  const inner =
-    "absolute top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.75)] active:scale-95 sm:hidden";
+  // Phone: solid gold arrows under the dots, clear of the picture.
+  const phoneArrow =
+    "flex h-12 w-12 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.75)] transition-transform active:scale-95";
 
   return (
     <section
@@ -80,16 +80,6 @@ export function Voices({
               alt={current.caption || "تقييم عميل"}
               className="h-full w-full object-contain"
             />
-            {slides.length > 1 && (
-              <>
-                <button type="button" onClick={() => go(-1)} aria-label="السابق" className={`${inner} right-2`}>
-                  →
-                </button>
-                <button type="button" onClick={() => go(1)} aria-label="التالي" className={`${inner} left-2`}>
-                  ←
-                </button>
-              </>
-            )}
           </div>
 
           {slides.length > 1 && (
@@ -115,7 +105,39 @@ export function Voices({
             ))}
           </div>
         )}
+
+        {slides.length > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-6 sm:hidden">
+            <button type="button" onClick={() => go(-1)} aria-label="السابق" className={phoneArrow}>
+              <ArrowIcon />
+            </button>
+            <button type="button" onClick={() => go(1)} aria-label="التالي" className={phoneArrow}>
+              <ArrowIcon flip />
+            </button>
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+/** One drawn arrow, mirrored for the other direction, so both buttons match
+ *  exactly — the → and ← glyphs differ in size and weight between fonts. */
+function ArrowIcon({ flip = false }: { flip?: boolean }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={flip ? "-scale-x-100" : undefined}
+    >
+      <path d="M4 12h16M14 6l6 6-6 6" />
+    </svg>
   );
 }
