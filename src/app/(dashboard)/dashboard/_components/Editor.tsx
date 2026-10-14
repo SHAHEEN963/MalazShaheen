@@ -517,12 +517,12 @@ function HeaderTab({
           hint="يتبع عرضه حجم الشاشة. اتركه فارغًا ليظهر الاسم كنص."
         />
         <ImagePicker
-          label="فيديو الواجهة (MP4)"
+          label="حركة الواجهة (WebP متحرك أو MP4)"
           value={artist.heroVideo}
           onChange={(heroVideo) => {
             patch({ artist: { ...artist, heroVideo, heroVideoCrop: null } });
             // Measure once here so visitors' browsers never have to.
-            if (heroVideo) {
+            if (heroVideo && !/\.(webp|gif|png|apng|avif)(\?|$)/i.test(heroVideo)) {
               measureVideo(heroVideo).then((heroVideoCrop) =>
                 patchWith((c) =>
                   c.artist.heroVideo === heroVideo
@@ -532,9 +532,9 @@ function HeaderTab({
               );
             }
           }}
-          accept="video/mp4,video/webm"
+          accept="image/webp,image/gif,video/mp4,video/webm"
           kind="file"
-          hint="يظهر مكان الاسم في الواجهة ويعمل تلقائيًا بلا صوت. اتركه فارغًا ليظهر الشعار بدله."
+          hint="الأفضل: WebP متحرك بخلفية شفافة — يعمل على كل الأجهزة ومنها iPhone. ملف MP4 يعمل أيضًا وتُزال خلفيته الداكنة تلقائيًا. اتركه فارغًا ليظهر الشعار بدله."
         />
         <ImagePicker
           label="السيرة الذاتية (PDF)"

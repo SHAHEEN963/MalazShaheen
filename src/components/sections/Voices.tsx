@@ -42,8 +42,12 @@ export function Voices({
   if (slides.length === 0) return null;
 
   const current = slides[Math.min(index, slides.length - 1)];
+  // Desktop: outlined arrows either side of the frame.
   const arrow =
-    "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900";
+    "hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink-gold/45 text-lg text-ink-gold transition-colors hover:bg-ink-gold hover:text-stone-900 sm:flex";
+  // Phone: solid gold arrows inside the picture, so it can take the full width.
+  const inner =
+    "absolute top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.75)] active:scale-95 sm:hidden";
 
   return (
     <section
@@ -51,12 +55,13 @@ export function Voices({
       className="relative z-10 overflow-hidden bg-stone-700/95 py-28 sm:py-36"
     >
       <div className="mx-auto max-w-6xl px-6">
+        {/* the frame below breaks out to the phone's edges, less a margin */}
         <RoomTag index="٠٦" label={copy.label} />
         <h2 className="mt-6 max-w-2xl font-display md:max-w-none md:whitespace-nowrap text-[clamp(1.9rem,5vw,3.2rem)] leading-tight text-ink-ivory">
           {copy.heading}
         </h2>
 
-        <div className="mx-auto mt-12 flex max-w-5xl items-center gap-3 sm:gap-6">
+        <div className="-mx-2 mt-12 flex items-center gap-6 sm:mx-auto sm:max-w-5xl">
           {slides.length > 1 && (
             <button type="button" onClick={() => go(-1)} aria-label="السابق" className={arrow}>
               →
@@ -75,6 +80,16 @@ export function Voices({
               alt={current.caption || "تقييم عميل"}
               className="h-full w-full object-contain"
             />
+            {slides.length > 1 && (
+              <>
+                <button type="button" onClick={() => go(-1)} aria-label="السابق" className={`${inner} right-2`}>
+                  →
+                </button>
+                <button type="button" onClick={() => go(1)} aria-label="التالي" className={`${inner} left-2`}>
+                  ←
+                </button>
+              </>
+            )}
           </div>
 
           {slides.length > 1 && (

@@ -7,6 +7,14 @@ import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
 import { KeyedVideo } from "../KeyedVideo";
 
 /**
+ * Hero animations that already carry transparency play as plain images: no
+ * WebGL, no autoplay rules, so they run everywhere — iPhones in low-power
+ * mode included. The shipped clip has such a twin, pre-keyed and cropped.
+ */
+const PREKEYED: Record<string, string> = { "/brand/hero.mp4": "/brand/hero.webp" };
+const isImage = (src: string) => /\.(webp|gif|png|apng|avif)(\?|$)/i.test(src);
+
+/**
  * Room 01 — الاسم.
  * The name sits inside the 3D letter cloud: it is written on by an ink-bleed
  * mask, tilts with the pointer on a real perspective plane, and dissolves
@@ -113,6 +121,17 @@ export function Hero({
           >
             {artist.heroVideo ? (
               <>
+                {isImage(artist.heroVideo) || PREKEYED[artist.heroVideo] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={PREKEYED[artist.heroVideo] ?? artist.heroVideo}
+                    alt=""
+                    aria-hidden="true"
+                    fetchPriority="high"
+                    loading="eager"
+                    className="mx-auto block w-[clamp(260px,54vw,820px)] h-auto"
+                  />
+                ) : (
                 <KeyedVideo
                   src={artist.heroVideo}
                   crop={artist.heroVideoCrop}
@@ -120,6 +139,7 @@ export function Hero({
                   alt={artist.name}
                   className="mx-auto block w-[clamp(260px,54vw,820px)] h-auto"
                 />
+                )}
                 <span className="sr-only">{artist.name}</span>
               </>
             ) : artist.logoHero ? (
