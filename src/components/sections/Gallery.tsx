@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { SiteContent } from "@/lib/content/types";
 import { useIsCoarseOrSmall, useReducedMotion } from "@/lib/useReducedMotion";
 import { RoomTag } from "../RoomTag";
+import { ArrowIcon } from "../ArrowIcon";
 
 /**
  * Room 03 — المعرض.
@@ -243,17 +244,17 @@ export function Gallery({
               type="button"
               onClick={() => step(-1)}
               aria-label="العمل السابق"
-              className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.7)] transition-transform duration-300 hover:scale-115 sm:right-[calc(50%-15.5rem)]"
+              className="absolute right-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.75)] transition-transform duration-300 hover:scale-115 sm:right-[calc(50%-15.5rem)]"
             >
-              →
+              <ArrowIcon />
             </button>
             <button
               type="button"
               onClick={() => step(1)}
               aria-label="العمل التالي"
-              className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.7)] transition-transform duration-300 hover:scale-115 sm:left-[calc(50%-15.5rem)]"
+              className="absolute left-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-ink-gold text-stone-900 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.75)] transition-transform duration-300 hover:scale-115 sm:left-[calc(50%-15.5rem)]"
             >
-              ←
+              <ArrowIcon flip />
             </button>
           </>
         )}
