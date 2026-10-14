@@ -86,9 +86,23 @@ export function Hero({
           }}
         >
           <motion.h1
-            initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0 }}
-            animate={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
-            transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
+            /* The video draws itself, so it only needs a quick fade; the
+               ink-bleed sweep is for the static wordmark. */
+            initial={
+              artist.heroVideo
+                ? { opacity: 0 }
+                : { clipPath: "inset(0 100% 0 0)", opacity: 0 }
+            }
+            animate={
+              artist.heroVideo
+                ? { opacity: 1 }
+                : { clipPath: "inset(0 0% 0 0)", opacity: 1 }
+            }
+            transition={
+              artist.heroVideo
+                ? { duration: 0.5 }
+                : { duration: 1.8, ease: [0.22, 1, 0.36, 1], delay: 0.5 }
+            }
             /* leading + padding give the ن of شاهين room for its bowl below
                the baseline; a tight line-height was cropping it. */
             className={
@@ -101,6 +115,9 @@ export function Hero({
               <>
                 <KeyedVideo
                   src={artist.heroVideo}
+                  crop={artist.heroVideoCrop}
+                  fallbackImage={artist.logoHero || undefined}
+                  alt={artist.name}
                   className="mx-auto block w-[clamp(260px,54vw,820px)] h-auto"
                 />
                 <span className="sr-only">{artist.name}</span>

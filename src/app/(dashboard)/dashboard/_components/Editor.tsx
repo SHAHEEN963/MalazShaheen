@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { saveSiteContent } from "@/lib/content/actions";
+import { measureVideo } from "@/components/KeyedVideo";
 import type { SiteContent } from "@/lib/content/types";
 import {
   DirectUploadContext,
@@ -518,7 +519,19 @@ function HeaderTab({
         <ImagePicker
           label="فيديو الواجهة (MP4)"
           value={artist.heroVideo}
-          onChange={(heroVideo) => patch({ artist: { ...artist, heroVideo } })}
+          onChange={(heroVideo) => {
+            patch({ artist: { ...artist, heroVideo, heroVideoCrop: null } });
+            // Measure once here so visitors' browsers never have to.
+            if (heroVideo) {
+              measureVideo(heroVideo).then((heroVideoCrop) =>
+                patchWith((c) =>
+                  c.artist.heroVideo === heroVideo
+                    ? { ...c, artist: { ...c.artist, heroVideoCrop } }
+                    : c
+                )
+              );
+            }
+          }}
           accept="video/mp4,video/webm"
           kind="file"
           hint="يظهر مكان الاسم في الواجهة ويعمل تلقائيًا بلا صوت. اتركه فارغًا ليظهر الشعار بدله."

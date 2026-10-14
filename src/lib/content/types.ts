@@ -74,6 +74,22 @@ export type Artist = {
   cv: string;
   /** Looping video shown in place of the hero wordmark. "" uses the wordmark. */
   heroVideo: string;
+  /** The artwork's measured bounds in heroVideo, saved with it so the hero can
+   *  play at once. Ignored when it was measured for a different video. */
+  heroVideoCrop: VideoCrop | null;
+};
+
+/** Where the artwork sits in a hero video, as fractions of the frame. */
+export type VideoCrop = {
+  src: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Brightness of the backdrop, 0–1; anything at or below it is keyed out. */
+  ground: number;
+  /** Width ÷ height of the cropped area, in pixels. */
+  aspect: number;
 };
 
 export type Contact = {

@@ -27,6 +27,15 @@ export const defaultContent: SiteContent = {
     logoHero: "/brand/hero-logo.svg",
     cv: "",
     heroVideo: "/brand/hero.mp4",
+    heroVideoCrop: {
+      src: "/brand/hero.mp4",
+      x: 0.0834,
+      y: 0.1862,
+      w: 0.8293,
+      h: 0.6275,
+      ground: 0.1961,
+      aspect: 3.0992,
+    },
   },
 
   stats: [

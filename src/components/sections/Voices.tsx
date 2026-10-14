@@ -52,11 +52,11 @@ export function Voices({
     >
       <div className="mx-auto max-w-6xl px-6">
         <RoomTag index="٠٦" label={copy.label} />
-        <h2 className="mt-6 max-w-2xl font-display text-[clamp(1.9rem,5vw,3.2rem)] leading-tight text-ink-ivory">
+        <h2 className="mt-6 max-w-2xl font-display md:max-w-none md:whitespace-nowrap text-[clamp(1.9rem,5vw,3.2rem)] leading-tight text-ink-ivory">
           {copy.heading}
         </h2>
 
-        <div className="mx-auto mt-12 flex max-w-4xl items-center gap-3 sm:gap-6">
+        <div className="mx-auto mt-12 flex max-w-5xl items-center gap-3 sm:gap-6">
           {slides.length > 1 && (
             <button type="button" onClick={() => go(-1)} aria-label="السابق" className={arrow}>
               →

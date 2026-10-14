@@ -243,7 +243,7 @@ export function Gallery({
               type="button"
               onClick={() => step(-1)}
               aria-label="العمل السابق"
-              className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-gold/40 bg-stone-950/60 text-ink-gold backdrop-blur transition-colors hover:bg-ink-gold hover:text-stone-900 sm:right-8"
+              className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-gold/40 bg-stone-950/60 text-ink-gold backdrop-blur transition-colors hover:bg-ink-gold hover:text-stone-900 sm:right-[calc(50%-15.5rem)]"
             >
               →
             </button>
@@ -251,7 +251,7 @@ export function Gallery({
               type="button"
               onClick={() => step(1)}
               aria-label="العمل التالي"
-              className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-gold/40 bg-stone-950/60 text-ink-gold backdrop-blur transition-colors hover:bg-ink-gold hover:text-stone-900 sm:left-8"
+              className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-gold/40 bg-stone-950/60 text-ink-gold backdrop-blur transition-colors hover:bg-ink-gold hover:text-stone-900 sm:left-[calc(50%-15.5rem)]"
             >
               ←
             </button>

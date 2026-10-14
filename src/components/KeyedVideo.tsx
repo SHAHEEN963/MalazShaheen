@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { VideoCrop } from "@/lib/content/types";
 
 /**
  * Plays a video with its dark backdrop keyed out, cropped to the artwork.
@@ -11,13 +12,15 @@ import { useEffect, useRef, useState } from "react";
  * transparent by brightness — soft glows fade out instead of being cut — so
  * only the animation sits on the page.
  *
- * The artwork's bounds are measured from the clip itself (a few frames are
- * sampled before playback), so the empty margins are cropped away and any
- * replacement video uploaded from the dashboard is framed correctly too.
- * If WebGL or the measurement is unavailable it falls back to the plain video.
+ * The crop (the artwork's bounds and the ground level) is measured once, when
+ * the video is chosen in the dashboard, and stored with it. With a stored crop
+ * playback starts straight away; without one it is measured on a second,
+ * throwaway element so the visible video is never held up by seeking.
+ * If WebGL is missing it shows the plain video; if the browser refuses to
+ * play at all (low-power mode) it shows the fallback image.
  */
 
-type Crop = { x: number; y: number; w: number; h: number; ground: number };
+type Bounds = Omit<VideoCrop, "src">;
 
 const VERT = `
 attribute vec2 p;
@@ -41,8 +44,21 @@ void main() {
   gl_FragColor = vec4(c * a, a);
 }`;
 
+const once = (target: EventTarget, type: string, ms: number) =>
+  new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${type} timed out`)), ms);
+    target.addEventListener(
+      type,
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      { once: true }
+    );
+  });
+
 /** Samples several frames on a small canvas and returns the lit area. */
-async function measure(video: HTMLVideoElement): Promise<Crop | null> {
+async function measure(video: HTMLVideoElement): Promise<Bounds | null> {
   const W = 256;
   const H = Math.max(1, Math.round((W * video.videoHeight) / video.videoWidth));
   const c = document.createElement("canvas");
@@ -51,16 +67,12 @@ async function measure(video: HTMLVideoElement): Promise<Crop | null> {
   const ctx = c.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
 
-  const seek = (t: number) =>
-    new Promise<void>((res) => {
-      video.addEventListener("seeked", () => res(), { once: true });
-      video.currentTime = t;
-    });
-
   let ground = 0;
   const frames: Uint8ClampedArray[] = [];
   for (const f of [0.35, 0.55, 0.75, 0.92]) {
-    await seek(video.duration * f);
+    const seeked = once(video, "seeked", 8000);
+    video.currentTime = video.duration * f;
+    await seeked;
     ctx.drawImage(video, 0, 0, W, H);
     const d = ctx.getImageData(0, 0, W, H).data;
     frames.push(d);
@@ -95,106 +107,170 @@ async function measure(video: HTMLVideoElement): Promise<Crop | null> {
   const top = Math.max(0, y0 - padY) / H;
   const right = Math.min(W, x1 + padX) / W;
   const bottom = Math.min(H, y1 + padY) / H;
-
-  await seek(0);
-  return { x: left, y: top, w: right - left, h: bottom - top, ground: ground / 255 };
+  const r = (n: number) => Math.round(n * 10000) / 10000;
+  return {
+    x: r(left),
+    y: r(top),
+    w: r(right - left),
+    h: r(bottom - top),
+    ground: r(ground / 255),
+    aspect: r(((right - left) * video.videoWidth) / ((bottom - top) * video.videoHeight)),
+  };
 }
 
-export function KeyedVideo({ src, className }: { src: string; className?: string }) {
+/** Loads `src` on a detached element and measures it. Used by the dashboard too. */
+export async function measureVideo(src: string): Promise<VideoCrop | null> {
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  video.crossOrigin = "anonymous";
+  const loaded = once(video, "loadeddata", 15000);
+  video.src = src;
+  video.load();
+  try {
+    await loaded;
+    const bounds = await measure(video);
+    return bounds && { src, ...bounds };
+  } catch {
+    return null;
+  } finally {
+    video.removeAttribute("src");
+    video.load();
+  }
+}
+
+export function KeyedVideo({
+  src,
+  crop,
+  fallbackImage,
+  alt = "",
+  className,
+}: {
+  src: string;
+  crop?: VideoCrop | null;
+  fallbackImage?: string;
+  alt?: string;
+  className?: string;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [aspect, setAspect] = useState<number | null>(null);
-  const [failed, setFailed] = useState(false);
+  const stored = crop && crop.src === src ? crop : null;
+  const [measured, setMeasured] = useState<VideoCrop | null>(null);
+  const bounds = stored ?? (measured?.src === src ? measured : null);
+  // "video": no WebGL, show it unkeyed. "image": it will not play at all.
+  const [failed, setFailed] = useState<null | "video" | "image">(null);
 
+  // Only when nothing was stored: measure on the side, never on the player.
+  useEffect(() => {
+    if (stored) return;
+    let cancelled = false;
+    measureVideo(src).then((m) => {
+      if (cancelled) return;
+      if (m) setMeasured(m);
+      else setFailed(fallbackImage ? "image" : "video");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [src, stored, fallbackImage]);
+
+  // Start playing at once — the canvas picks frames up whenever it is ready.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    let retrying = false;
+    const tryPlay = () => {
+      if (!video.paused || retrying || document.hidden) return;
+      retrying = true;
+      video
+        .play()
+        .catch((err: unknown) => {
+          // Refused outright (e.g. iOS low-power mode): show the still.
+          if (err instanceof DOMException && err.name === "NotAllowedError" && fallbackImage) {
+            setFailed("image");
+          }
+        })
+        .finally(() => (retrying = false));
+    };
+    tryPlay();
+    // A play() issued while the tab was hidden can be refused; retry on return.
+    document.addEventListener("visibilitychange", tryPlay);
+    video.addEventListener("canplay", tryPlay);
+    return () => {
+      document.removeEventListener("visibilitychange", tryPlay);
+      video.removeEventListener("canplay", tryPlay);
+    };
+  }, [src, fallbackImage]);
+
+  const x = bounds?.x, y = bounds?.y, w = bounds?.w, h = bounds?.h, g = bounds?.ground;
   useEffect(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas) return;
+    if (!video || !canvas || x === undefined || y === undefined || w === undefined || h === undefined || g === undefined) return;
+
+    const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true });
+    if (!gl) {
+       
+      setFailed("video");
+      return;
+    }
+
+    const shader = (type: number, code: string) => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, code);
+      gl.compileShader(s);
+      return s;
+    };
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "p");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.uniform4f(gl.getUniformLocation(prog, "crop"), x, y, w, h);
+    gl.uniform2f(gl.getUniformLocation(prog, "key"), g + 0.03, g + 0.24);
+
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
     let raf = 0;
-    let cancelled = false;
-
-    const start = async () => {
-      try {
-        const crop = await measure(video);
-        if (cancelled) return;
-        if (!crop) throw new Error("nothing to crop");
-
-        const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true });
-        if (!gl) throw new Error("no webgl");
-
-        const shader = (type: number, code: string) => {
-          const s = gl.createShader(type)!;
-          gl.shaderSource(s, code);
-          gl.compileShader(s);
-          return s;
-        };
-        const prog = gl.createProgram()!;
-        gl.attachShader(prog, shader(gl.VERTEX_SHADER, VERT));
-        gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FRAG));
-        gl.linkProgram(prog);
-        gl.useProgram(prog);
-
-        const buf = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-        const loc = gl.getAttribLocation(prog, "p");
-        gl.enableVertexAttribArray(loc);
-        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-
-        gl.uniform4f(gl.getUniformLocation(prog, "crop"), crop.x, crop.y, crop.w, crop.h);
-        gl.uniform2f(gl.getUniformLocation(prog, "key"), crop.ground + 0.03, crop.ground + 0.24);
-
-        const tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-        const ratio = (crop.w * video.videoWidth) / (crop.h * video.videoHeight);
-        setAspect(ratio);
-
-        let retrying = false;
-        const draw = () => {
-          const rect = canvas.getBoundingClientRect();
-          const dpr = Math.min(window.devicePixelRatio || 1, 2);
-          const w = Math.max(1, Math.round(rect.width * dpr));
-          const h = Math.max(1, Math.round(rect.height * dpr));
-          if (canvas.width !== w || canvas.height !== h) {
-            canvas.width = w;
-            canvas.height = h;
-            gl.viewport(0, 0, w, h);
-          }
-          // A play() issued while the tab was hidden can be refused; retry
-          // once the page is visible again.
-          if (video.paused && !document.hidden && !retrying) {
-            retrying = true;
-            video.play().catch(() => {}).finally(() => (retrying = false));
-          }
-          if (video.readyState >= 2) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
-            gl.clearColor(0, 0, 0, 0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-          }
-          raf = requestAnimationFrame(draw);
-        };
-
-        await video.play().catch(() => {});
-        raf = requestAnimationFrame(draw);
-      } catch {
-        if (!cancelled) setFailed(true);
+    const draw = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cw = Math.max(1, Math.round(rect.width * dpr));
+      const ch = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
+        gl.viewport(0, 0, cw, ch);
       }
+      if (video.readyState >= 2) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+      raf = requestAnimationFrame(draw);
     };
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [x, y, w, h, g]);
 
-    if (video.readyState >= 1) start();
-    else video.addEventListener("loadedmetadata", start, { once: true });
-
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
-      video.removeEventListener("loadedmetadata", start);
-    };
-  }, [src]);
+  if (failed === "image" && fallbackImage) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={fallbackImage} alt={alt} className={className} />;
+  }
 
   return (
     <>
@@ -205,11 +281,11 @@ export function KeyedVideo({ src, className }: { src: string; className?: string
         muted
         loop
         playsInline
+        autoPlay
         preload="auto"
         crossOrigin="anonymous"
         aria-hidden="true"
         className={failed ? className : "pointer-events-none absolute h-px w-px opacity-0"}
-        autoPlay={failed}
       />
       {!failed && (
         <canvas
@@ -217,10 +293,11 @@ export function KeyedVideo({ src, className }: { src: string; className?: string
           aria-hidden="true"
           className={className}
           style={{
-            aspectRatio: aspect ?? 16 / 9,
-            // Hidden until measured, so the full frame never flashes.
-            opacity: aspect ? 1 : 0,
-            transition: "opacity 0.6s ease",
+            // Until a new clip is measured, roughly the shipped clip's shape.
+            aspectRatio: bounds?.aspect ?? 3.1,
+            // Hidden until the crop is known, so the full frame never flashes.
+            opacity: bounds ? 1 : 0,
+            transition: "opacity 0.4s ease",
           }}
         />
       )}
